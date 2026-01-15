@@ -58,7 +58,7 @@ Successfully saved extracted text to ao3_work_1.txt
 (my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ 
 ```
 
-Finally, the full text of the work can be scraped from the HTML code using BeautifulSoup:
+Finally, the full text of the work can be scraped from the HTML code using Beautiful Soup:
 
 Click [raw text](cl_st1_ph0_milena/ao3_work_1.txt) to see it.
 
