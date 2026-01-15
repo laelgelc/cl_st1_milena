@@ -23,7 +23,7 @@ The list of works in English tagged as `Original Work` is:
 
 - https://archiveofourown.org/tags/Original%20Work/works
 
-Applying the filter `language:English` yields the following list:
+Applying the filter `Language:English` yields the following list:
 
 - https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work
 
