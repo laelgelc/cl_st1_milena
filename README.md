@@ -41,9 +41,9 @@ Successfully saved extracted text to ao3_index_1.txt
 (my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ 
 ```
 
-First list page: 
+Click [captured first list page](cl_st1_ph0_milena/ao3_index_1.html) to see it. 
 
-Each work's URL can be captured from the corresponding page's HTML code. For instance, for the work `Pan's Shenaniganery`, the full URL can be composed as follows:
+Each work's URL can be captured from the corresponding page's HTML code. For instance, for the work [Pan's Shenaniganery](https://archiveofourown.org/works/76671106?view_full_work=true), the full URL can be composed as follows:
 
 - From the title's `href` attribute: /works/76671106
 - The full URL: https://archiveofourown.org/works/76671106
@@ -60,7 +60,7 @@ Successfully saved extracted text to ao3_work_1.txt
 
 Finally, the full text of the work can be scraped from the HTML code using BeautifulSoup:
 
-Raw text: 
+Click [raw text](cl_st1_ph0_milena/ao3_work_1.txt) to see it.
 
 Notes:
 
