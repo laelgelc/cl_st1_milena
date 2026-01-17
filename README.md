@@ -68,5 +68,13 @@ Notes:
 - Capturing the 5,000 list pages will take about 4.17 hours
 - Capturing the 100,000 works will take about 3,47 days.
 
+#### "Adult Content" warning page
+
+[The Therapist](https://archiveofourown.org/works/73631631)
+
+This work could have adult content. If you continue, you have agreed that you are willing to see such content.
+- Yes, Continue
+- No, Go Back
+
 ## Phase 1 - Data Collection
 
