@@ -66,7 +66,7 @@ Notes:
 
 - Each web page capture takes about 3 seconds
 - Capturing the 5,000 list pages will take about 4.17 hours
-- Capturing the 100,000 works will take about 3,47 days.
+- Capturing the 100,000 works will take about 3.47 days.
 
 #### "Adult Content" warning page
 
