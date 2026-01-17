@@ -32,7 +32,8 @@ def main(file_id, url):
     #service = Service('/Users/eyamrog/msedgedriver/edgedriver_mac64/msedgedriver')
     #service = Service('/home/eyamrog/msedgedriver/edgedriver_linux64/msedgedriver')
     #service = Service('/home/eyamrog/geckodriver/geckodriver')
-    service = Service()  # Selenium will automatically detect the correct driver executable and cache it in '~/.cache/selenium'
+    #service = Service('/home/ubuntu/geckodriver/geckodriver')  # On Python 12, Selenium will require geckodriver's location
+    service = Service()  # On Python 13, Selenium will automatically detect the correct driver executable and cache it in '~/.cache/selenium'
 
     ## Configure Edge to run headless
     #options = Options()
