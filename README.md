@@ -78,3 +78,89 @@ This work could have adult content. If you continue, you have agreed that you ar
 
 ## Phase 1 - Data Collection
 
+AO3's website encodes the entire filter as `URL Query Parameters` which makes the list pages reproducible. It means that parameters can be set directly in the URL to change the filtering.
+
+For instance, the following URL:
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2024-01-01&work_search[date_to]=2024-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+```
+
+has the following parameters:
+
+- work_search[date_from]=2024-01-01
+- work_search[date_to]=2024-12-31
+- work_search[language_id]=en: English language filter
+- include_work_search[fandom_ids][]=2692: Internal ID (2692) for `Original Work` fandom category.
+- page=1: Pagination handle, used to loop through results programmatically.
+
+This study focuses on Original Works in English. The data collection strategy is as follows:
+
+1. Capture the list of works in English tagged as `Original Work` corresponding to years from 2020 to 2025 as HTML files. E.g. 2024_0001.html with the content of the first page of the 2024 list.
+2. Extract the works' URLs from the HTML files.
+3. Randomly select 1,000 works from each year.
+4. Capture the full text of the selected works as HTML files.
+
+If the study is extended to consider AI, works dated (`Date Updated`) before the advent of ChatGPT on 30th November 2022 can be considered as human-authored works.
+
+### List URL ranges
+
+Year: 2025
+
+90,476 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=4524
+```
+
+Year: 2024
+
+60,360 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2024-01-01&work_search[date_to]=2024-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2024-01-01&work_search[date_to]=2024-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=3018
+```
+
+Year: 2023
+
+47,949 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2023-01-01&work_search[date_to]=2023-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2023-01-01&work_search[date_to]=2023-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=2398
+```
+
+Year: 2022
+
+36,182 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2022-01-01&work_search[date_to]=2022-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2022-01-01&work_search[date_to]=2022-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1810
+```
+
+Year: 2021
+
+27,972 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2021-01-01&work_search[date_to]=2021-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2021-01-01&work_search[date_to]=2021-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1399
+```
+
+Year: 2020
+
+20,178 Works in Original Work
+
+```
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2020-01-01&work_search[date_to]=2020-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2020-01-01&work_search[date_to]=2020-12-31&work_search[query]=&work_search[language_id]=en&include_work_search[fandom_ids][]=2692&commit=Sort+and+Filter&tag_id=Original+Work&page=1009
+```
