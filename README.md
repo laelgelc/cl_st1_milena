@@ -101,7 +101,7 @@ Note: The exclusion of crossovers is not perfect, though. For instance:
 
 This study focuses on Original Works in English. The data collection strategy is as follows:
 
-1. Capture the list of works in English tagged as `Original Work` only corresponding to years from 2020 to 2025 (`Date Updated`, or `Date Posted` = `Published`, or `Completed`) as HTML files. E.g. `2024_0001.html` with the content of the first page in 2024 list
+1. Capture the list of works in English tagged as `Original Work` only corresponding to years from 2020 to 2025 as HTML files. E.g. `2024_0001.html` with the content of the first page in 2024 list. Notice that the date that appears in each work on the list can be `Date Updated`, or `Date Posted` = `Published`, or `Completed`. The lists' URLs are listed in [List URL ranges](#list-url-ranges)
 2. Extract the following metadata from each work's HTML file and export them to a JSONL and Excel file:
     - Year (predefined as the year of the `Date_Updated` column)
     - Title
@@ -119,8 +119,8 @@ This study focuses on Original Works in English. The data collection strategy is
     - URL
 3. Inspect each year's dataset for fandom misclassified works, crossovers, works with mismatched languages, etc. and remove them
 4. Perform a descriptive statistics analysis (boxplot) of the dataset (entirely or per year, the one that is best) on the `Words` column to decide if outliers (too short or too long works) should be removed
-4. Randomly select 1,000 works from each year's dataset, targeting the compilation of a corpus with 6,000 works. In principle, we intend to extract 1,000 keywords from the 6 yearly strata as factor analysis variables. As there should be at least 5 works per variable (5,000 works), a corpus size of 6,000 works is a reasonable target
-4. Capture the full text of the selected works as HTML files and, preferably, re-extract the metadata from them as some of them could have changed since the original capture
+5. Randomly select 1,000 works from each year's dataset, targeting the compilation of a corpus with 6,000 works. In principle, we intend to extract 1,000 keywords from the 6 yearly strata as factor analysis variables. As there should be at least 5 works per variable (5,000 works), a corpus size of 6,000 works is a reasonable target
+6. Capture the full text of the selected works as HTML files and, preferably, re-extract the metadata from them as some of them could have changed since the original capture
 
 If the study is extended to consider AI, works dated (`Date Updated`) before the advent of ChatGPT on 30th November 2022 can be considered as human-authored works.
 
