@@ -102,7 +102,7 @@ Note: The exclusion of crossovers is not perfect, though. For instance:
 This study focuses on Original Works in English. The data collection strategy is as follows:
 
 1. Capture the list of works in English tagged as `Original Work` only corresponding to years from 2020 to 2025 as HTML files. E.g. `2024_0001.html` with the content of the first page in 2024 list. Notice that the date that appears in each work on the list can be `Date Updated`, or `Date Posted` = `Published`, or `Completed`. The lists' URLs are listed in [List URL ranges](#list-url-ranges)
-2. Extract the following metadata from each work's HTML file and export them to a JSONL and Excel file:
+2. Extract the following metadata from each work's HTML file and export them to a JSONL and an Excel file:
     - Year (predefined as the year of the `Date_Updated` column)
     - Title
     - Author
