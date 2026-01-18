@@ -88,15 +88,15 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 has the following parameters:
 
-- work_search[date_from]=2024-01-01
-- work_search[date_to]=2024-12-31
+- work_search[date_from]=2024-01-01: start date (`Date Updated`)
+- work_search[date_to]=2024-12-31: end date (`Date Updated`)
 - work_search[language_id]=en: English language filter
 - include_work_search[fandom_ids][]=2692: Internal ID (2692) for `Original Work` fandom category.
 - page=1: Pagination handle, used to loop through results programmatically.
 
 This study focuses on Original Works in English. The data collection strategy is as follows:
 
-1. Capture the list of works in English tagged as `Original Work` corresponding to years from 2020 to 2025 as HTML files. E.g. 2024_0001.html with the content of the first page of the 2024 list.
+1. Capture the list of works in English tagged as `Original Work` corresponding to years from 2020 to 2025 (`Date Updated`) as HTML files. E.g. `2024_0001.html` with the content of the first page of the 2024 list.
 2. Extract the works' URLs from the HTML files.
 3. Randomly select 1,000 works from each year.
 4. Capture the full text of the selected works as HTML files.
