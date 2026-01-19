@@ -41,7 +41,7 @@ Successfully saved extracted text to ao3_index_1.txt
 (my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ 
 ```
 
-Click [captured first list page](cl_st1_ph0_milena/ao3_index_1.html) to see it. 
+Click [captured first list page](cl_st1_ph0_milena/ao3_list_1.html) to see it. 
 
 Each work's URL can be captured from the corresponding page's HTML code. For instance, for the work [Pan's Shenaniganery](https://archiveofourown.org/works/76671106?view_full_work=true), the full URL can be composed as follows:
 
@@ -70,11 +70,25 @@ Notes:
 
 #### "Adult Content" warning page
 
-[The Therapist](https://archiveofourown.org/works/73631631)
+The attempt to access some works may result in an "Adult Content" warning page:
+
+- [The Therapist](https://archiveofourown.org/works/73631631)
+- [The Gym Teacher](https://archiveofourown.org/works/76796521)
 
 This work could have adult content. If you continue, you have agreed that you are willing to see such content.
 - Yes, Continue
 - No, Go Back
+
+This page can be bypassed by adding the query parameter `view_adult=true` to the URL. It is equivalent to clicking the "Yes, Continue" button. It can be safely added to every work's URL because AO3 will ignore the parameter if it is not applicable. The parameter can be added to other query parameters as well:
+
+- The full URL to the entire work's page automatically acknowledging "Adult Content": https://archiveofourown.org/works/76796521?view_adult=true&view_full_work=true
+
+```
+(my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ python getwebpageselenium.py ao3_work_2 "https://archiveofourown.org/works/76796521?view_adult=true&view_full_work=true"
+Successfully saved HTML to ao3_work_2.html
+Successfully saved extracted text to ao3_work_2.txt
+(my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ 
+```
 
 ## Phase 1 - Data Collection
 
