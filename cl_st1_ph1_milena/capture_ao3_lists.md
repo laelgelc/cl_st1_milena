@@ -44,7 +44,7 @@ The two checkboxes must be checked and the `I agree/consent to these Terms` butt
 
 ## Processing steps
 
-1. Use Selenium to download each list page and save the page as, for instance, `2025_0001.html` in the corresponding output directory. The last four digits of the filename mean the page represented with four digits. Please consider ["Consent to AO3 Terms"](#"consent-to-ao3-terms")
+1. Use Selenium to download each list page and save the page as, for instance, `2025_0001.html` in the corresponding output directory. The last four digits of the filename mean the page represented with four digits. Please consider ["Consent to AO3 Terms"](#consent-to-ao3-terms)
 
 2. Keep the WebDriver session open for a batch of pages with a cool-down period. Implement polite throttling to avoid overloading the AO3 server and run into penalties, and error handling. Consider Firefox headless and the following location for the geckodriver: `/home/ubuntu/geckodriver/geckodriver`. Keep in mind that the programme will run on an EC2 instance running Ubuntu 24.04.3 LTS and Python 3.12.3
 
