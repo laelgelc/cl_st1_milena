@@ -94,15 +94,15 @@ Successfully saved extracted text to ao3_work_2.txt
 
 The attempt to access some works may result in a "Consent to AO3 Terms" page. Please refer to [ao3_work_3_consent.html](cl_st1_ph0_milena/ao3_work_3_consent.html) for an example.
 
-On the Archive of Our Own (AO3), users can create works, bookmarks, comments, tags, and other Content. Any information you publish on AO3 may be accessible by the public, AO3 users, and/or AO3 personnel. Be mindful when sharing personal information, including but not limited to your name, email, age, location, personal relationships, gender or sexual identity, racial or ethnic background, religious or political views, and/or account usernames for other sites.
-
-To learn more, check out our Terms of Service, including the Content Policy and Privacy Policy.
-
- I have read & understood the 2024 Terms of Service, including the Content Policy and Privacy Policy.
-
- By checking this box, you consent to the processing of your personal data in the United States and other jurisdictions in connection with our provision of AO3 and its related services to you. You acknowledge that the data privacy laws of such jurisdictions may differ from those provided in your jurisdiction. For more information about how your personal data will be processed, please refer to our Privacy Policy.
-
-I agree/consent to these Terms
+> On the Archive of Our Own (AO3), users can create works, bookmarks, comments, tags, and other Content. Any information you publish on AO3 may be accessible by the public, AO3 users, and/or AO3 personnel. Be mindful when sharing personal information, including but not limited to your name, email, age, location, personal relationships, gender or sexual identity, racial or ethnic background, religious or political views, and/or account usernames for other sites.
+>
+> To learn more, check out our Terms of Service, including the Content Policy and Privacy Policy.
+>
+> I have read & understood the 2024 Terms of Service, including the Content Policy and Privacy Policy.
+>
+> By checking this box, you consent to the processing of your personal data in the United States and other jurisdictions in connection with our provision of AO3 and its related services to you. You acknowledge that the data privacy laws of such jurisdictions may differ from those provided in your jurisdiction. For more information about how your personal data will be processed, please refer to our Privacy Policy.
+>
+>I agree/consent to these Terms
 
 The two checkboxes must be checked and the `I agree/consent to these Terms` button must be clicked.
 

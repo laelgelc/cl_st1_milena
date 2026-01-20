@@ -30,23 +30,26 @@ Implement a test mode that allows running the programme with a limited number of
 
 The attempt to access some works may result in a "Consent to AO3 Terms" page. Please refer to [ao3_work_3_consent.html](cl_st1_ph0_milena/ao3_work_3_consent.html) for an example.
 
-On the Archive of Our Own (AO3), users can create works, bookmarks, comments, tags, and other Content. Any information you publish on AO3 may be accessible by the public, AO3 users, and/or AO3 personnel. Be mindful when sharing personal information, including but not limited to your name, email, age, location, personal relationships, gender or sexual identity, racial or ethnic background, religious or political views, and/or account usernames for other sites.
-
-To learn more, check out our Terms of Service, including the Content Policy and Privacy Policy.
-
- I have read & understood the 2024 Terms of Service, including the Content Policy and Privacy Policy.
-
- By checking this box, you consent to the processing of your personal data in the United States and other jurisdictions in connection with our provision of AO3 and its related services to you. You acknowledge that the data privacy laws of such jurisdictions may differ from those provided in your jurisdiction. For more information about how your personal data will be processed, please refer to our Privacy Policy.
-
-I agree/consent to these Terms
+>On the Archive of Our Own (AO3), users can create works, bookmarks, comments, tags, and other Content. Any information you publish on AO3 may be accessible by the public, AO3 users, and/or AO3 personnel. Be mindful when sharing personal information, including but not limited to your name, email, age, location, personal relationships, gender or sexual identity, racial or ethnic background, religious or political views, and/or account usernames for other sites.
+>
+>To learn more, check out our Terms of Service, including the Content Policy and Privacy Policy.
+>
+> I have read & understood the 2024 Terms of Service, including the Content Policy and Privacy Policy.
+>
+> By checking this box, you consent to the processing of your personal data in the United States and other jurisdictions in connection with our provision of AO3 and its related services to you. You acknowledge that the data privacy laws of such jurisdictions may differ from those provided in your jurisdiction. For more information about how your personal data will be processed, please refer to our Privacy Policy.
+>
+>I agree/consent to these Terms
 
 The two checkboxes must be checked and the `I agree/consent to these Terms` button must be clicked.
+
+The programme must verify the presence of `#tos_prompt` before processing any list page. If detected, it must complete the consent workflow before proceeding.
 
 ## Processing steps
 
 1. Use Selenium to download each list page and save the page as, for instance, `2025_0001.html` in the corresponding output directory. The last four digits of the filename mean the page represented with four digits. Please consider ["Consent to AO3 Terms"](#consent-to-ao3-terms)
 
 2. Keep the WebDriver session open for a batch of pages with a cool-down period. Implement polite throttling to avoid overloading the AO3 server and run into penalties, and error handling. Consider Firefox headless and the following location for the geckodriver: `/home/ubuntu/geckodriver/geckodriver`. Keep in mind that the programme will run on an EC2 instance running Ubuntu 24.04.3 LTS and Python 3.12.3
+   - The WebDriver configuration should include a custom User-Agent string and window-size (e.g., 1920x1080) to ensure AO3 renders the desktop version of the list correctly
 
 3. Before moving on to the next page, use Beautiful Soup with `lxml` parser to scrape the page. Please refer to [capture_ao3_lists_list_example_1.html](capture_ao3_lists_list_example_1.html) and:
 
@@ -57,6 +60,7 @@ The two checkboxes must be checked and the `I agree/consent to these Terms` butt
   - Title: From `<a href="/works/76796521">Gym Teacher</a`
   - Author: From `<a rel="author" href="/users/WoodyTales6366/pseuds/WoodyTales6366">WoodyTales6366</a>`
   - Fandom: From `<a class="tag" href="/tags/Original%20Work/works">Original Work</a>`
+    - To ensure a clean corpus, works containing fandoms other than `Original Work` must be filtered out entirely
   - Date_Updated: From `<p class="datetime">31 Dec 2025</p>`
   - Language: From `<dd class="language" lang="en">English</dd>`
   - Words: From `<dd class="words">14,690</dd>`
@@ -68,4 +72,8 @@ The two checkboxes must be checked and the `I agree/consent to these Terms` butt
   - Hits: From `<dd class="hits">5,194</dd>`
   - URL: From `<a href="/works/76796521">Gym Teacher</a`. Prepend `https://archiveofourown.org` to the URL. Append `?view_adult=true&view_full_work=true` to the URL.
 - Save the scraped data as a JSONL file as `corpus/00_sources/lists.jsonl` and as an Excel file as `corpus/00_sources/lists.xlsx`
+
+## Checkpointing
+
+The programme must check if the target HTML file (e.g., `2025_0001.html`) already exists in the output directory. If it exists and is not empty, the script should skip the download and move to the next page.
 
