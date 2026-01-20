@@ -32,4 +32,4 @@ Implement a test mode that allows running the programme with a limited number of
 
 2. Keep the WebDriver session open for a batch of pages with a cool-down period. Implement polite throttling to avoid overloading the AO3 server and run into penalties, and error handling. Consider Firefox headless and the following location for the geckodriver: `/home/ubuntu/geckodriver/geckodriver`. Keep in mind that the programme will run on an EC2 instance running Ubuntu 24.04.3 LTS and Python 3.12.3
 
-3. Before moving on to the next page, use Beautiful Soup with `lxml` parser 
+3. Before moving on to the next page, use Beautiful Soup with `lxml` parser to scrape the page. Please refer to [capture_ao3_lists_list_example_1.html](capture_ao3_lists_list_example_1.html)
