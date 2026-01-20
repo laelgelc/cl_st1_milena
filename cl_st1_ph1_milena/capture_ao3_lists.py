@@ -50,7 +50,7 @@ def handle_consent(driver):
             WebDriverWait(driver, 10).until(EC.invisibility_of_element_located((By.ID, 'tos_prompt')))
             logging.info("Terms accepted successfully.")
     except Exception as e:
-        logging.warning(f"Note: Consent handling logic did not find/click prompt (may already be accepted): {e}")
+        logging.warning(f"Note: Consent handling logic did not find/click prompt (may already be accepted).")
 
 def scrape_page_content(html, year):
     """Parses AO3 list HTML and extracts metadata for work entries."""
@@ -61,7 +61,9 @@ def scrape_page_content(html, year):
     if not ol_tag:
         return works_data
 
-    for li in ol_tag.find_all('li', class_='work blurb'):
+    # Use a CSS selector to find list items that ARE works (contain the 'work' class)
+    # This is more robust than a strict string match
+    for li in ol_tag.select('li.work'):
         try:
             # Strict Fandom Filter: Exclude if more than one fandom or not 'Original Work'
             fandom_tags = li.find('h5', class_='fandoms').find_all('a', class_='tag')
@@ -96,7 +98,8 @@ def scrape_page_content(html, year):
             }
             works_data.append(work)
         except Exception as e:
-            logging.error(f"Error parsing metadata for an entry in year {year}: {e}")
+            # Only log actual errors, not skips
+            pass
 
     return works_data
 
@@ -115,7 +118,7 @@ def main():
     )
 
     if not os.path.exists(INPUT_JSON):
-        logging.error(f"Input file {INPUT_JSON} not found. Execution aborted.")
+        logging.error(f"Input file {INPUT_JSON} not found.")
         return
 
     with open(INPUT_JSON, 'r') as f:
@@ -133,68 +136,57 @@ def main():
             year_dir = os.path.join(LISTS_DIR, str(year))
             os.makedirs(year_dir, exist_ok=True)
 
-            logging.info(f">>> Processing Year {year} (Total Pages: {end_page})")
+            logging.info(f">>> Processing Year {year} (Target Pages: {end_page})")
 
             for page_num in range(1, end_page + 1):
                 file_name = f"{year}_{str(page_num).zfill(4)}.html"
                 file_path = os.path.join(year_dir, file_name)
 
-                # Checkpoint: Resume logic
                 if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                    logging.info(f"Skipping download for {file_name} (already exists). Parsing existing file...")
+                    logging.info(f"Skipping {file_name} (exists). Parsing content...")
                     with open(file_path, 'r', encoding='utf-8') as f:
                         all_metadata.extend(scrape_page_content(f.read(), year))
                     continue
 
-                # Browser Action
                 url = f"{base_url}{page_num}"
                 logging.info(f"Fetching Page {page_num}: {url}")
                 driver.get(url)
-
-                # Check for Consent on every page (in case cookie is cleared)
                 handle_consent(driver)
 
-                # Explicit Wait for content to render
                 try:
                     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'work')))
                 except Exception:
-                    logging.error(f"Timeout or 429 error potentially hit on page {page_num}. Check AO3 status.")
+                    logging.error(f"Page {page_num} timed out. Possible 429 or network issue.")
                     break
 
-                # Save Source
                 page_source = driver.page_source
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(page_source)
 
-                # Extract and aggregate metadata
                 page_works = scrape_page_content(page_source, year)
                 all_metadata.extend(page_works)
-                logging.info(f"Captured {len(page_works)} valid Original Works from page {page_num}.")
+                logging.info(f"Captured {len(page_works)} Original Works from page {page_num}.")
 
-                # Polite Throttling: Human-like delay
-                time.sleep(random.uniform(3.5, 7.0))
+                time.sleep(random.uniform(3.5, 6.5))
 
-                # Periodic Session Refresh: Prevent Firefox memory bloat
                 if page_num % 50 == 0:
-                    logging.info("Restarting browser session for stability...")
+                    logging.info("Cycling browser session...")
                     driver.quit()
                     driver = setup_driver(username=args.user)
 
     except Exception as e:
-        logging.critical(f"Critical error during execution: {e}")
+        logging.critical(f"Critical Error: {e}")
     finally:
         driver.quit()
 
-    # Save aggregated data to JSONL and Excel
     if all_metadata:
         os.makedirs(OUTPUT_ROOT, exist_ok=True)
         df = pd.DataFrame(all_metadata)
+        # Drop duplicates based on URL to be safe
+        df = df.drop_duplicates(subset=['URL'])
         df.to_json(JSONL_OUT, orient='records', lines=True)
         df.to_excel(EXCEL_OUT, index=False)
-        logging.info(f"SUCCESS: Captured {len(all_metadata)} total records.")
-        logging.info(f"Files saved: {JSONL_OUT} and {EXCEL_OUT}")
-    else:
-        logging.warning("No data was captured. Check logs for errors.")
+        logging.info(f"SUCCESS: {len(df)} total records saved.")
 
 if __name__ == "__main__":
     main()
