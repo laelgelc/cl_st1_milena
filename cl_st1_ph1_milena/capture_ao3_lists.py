@@ -131,14 +131,17 @@ def main():
         for config in year_configs:
             year = config['year']
             base_url = config['list_url']
+            # Get start_page from JSON, defaulting to 1 if not present
+            start_page = config.get('start_page', 1)
+            # Use test pages limit if --test is active, otherwise use config['end_page']
             end_page = args.pages if args.test else config['end_page']
 
             year_dir = os.path.join(LISTS_DIR, str(year))
             os.makedirs(year_dir, exist_ok=True)
 
-            logging.info(f">>> Processing Year {year} (Target Pages: {end_page})")
+            logging.info(f">>> Processing Year {year} (Range: {start_page} to {end_page})")
 
-            for page_num in range(1, end_page + 1):
+            for page_num in range(start_page, end_page + 1):
                 file_name = f"{year}_{str(page_num).zfill(4)}.html"
                 file_path = os.path.join(year_dir, file_name)
 
