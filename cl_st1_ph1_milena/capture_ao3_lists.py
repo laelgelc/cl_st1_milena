@@ -49,8 +49,9 @@ def handle_consent(driver):
             # Wait for the prompt to disappear
             WebDriverWait(driver, 10).until(EC.invisibility_of_element_located((By.ID, 'tos_prompt')))
             logging.info("Terms accepted successfully.")
-    except Exception as e:
-        logging.warning(f"Note: Consent handling logic did not find/click prompt (may already be accepted).")
+    except Exception:
+        # Prompt may already be accepted or not present
+        pass
 
 def scrape_page_content(html, year):
     """Parses AO3 list HTML and extracts metadata for work entries."""
@@ -59,10 +60,13 @@ def scrape_page_content(html, year):
 
     ol_tag = soup.find('ol', class_='work index group')
     if not ol_tag:
-        return works_data
+        return works_data, False
 
-    # Use a CSS selector to find list items that ARE works (contain the 'work' class)
-    # This is more robust than a strict string match
+    # Check for "Next" button in pagination to determine if content continues
+    next_button = soup.find('li', class_='next')
+    has_next = next_button is not None and next_button.find('a') is not None
+
+    # Use a CSS selector to find list items that ARE works
     for li in ol_tag.select('li.work'):
         try:
             # Strict Fandom Filter: Exclude if more than one fandom or not 'Original Work'
@@ -71,7 +75,7 @@ def scrape_page_content(html, year):
             if len(fandom_names) != 1 or fandom_names[0] != 'Original Work':
                 continue
 
-                # Primary Metadata
+            # Primary Metadata
             title_tag = li.find('h4', class_='heading').find('a', recursive=False)
             author_tag = li.find('a', rel='author')
 
@@ -97,11 +101,10 @@ def scrape_page_content(html, year):
                 'URL': f"https://archiveofourown.org{title_tag['href']}?view_adult=true&view_full_work=true"
             }
             works_data.append(work)
-        except Exception as e:
-            # Only log actual errors, not skips
+        except Exception:
             pass
 
-    return works_data
+    return works_data, has_next
 
 def main():
     parser = argparse.ArgumentParser(description="Capture AO3 work lists and extract metadata.")
@@ -145,10 +148,16 @@ def main():
                 file_name = f"{year}_{str(page_num).zfill(4)}.html"
                 file_path = os.path.join(year_dir, file_name)
 
+                # Check if file exists to decide whether to skip download
                 if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
                     logging.info(f"Skipping {file_name} (exists). Parsing content...")
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        all_metadata.extend(scrape_page_content(f.read(), year))
+                        works, has_next = scrape_page_content(f.read(), year)
+                        all_metadata.extend(works)
+
+                    if not has_next:
+                        logging.info(f"End of results reached at page {page_num} (no 'Next' button).")
+                        break
                     continue
 
                 url = f"{base_url}{page_num}"
@@ -157,18 +166,24 @@ def main():
                 handle_consent(driver)
 
                 try:
+                    # Wait for the list of works to appear
                     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'work')))
                 except Exception:
-                    logging.error(f"Page {page_num} timed out. Possible 429 or network issue.")
+                    logging.error(f"Page {page_num} timed out or is empty. Stopping year {year}.")
                     break
 
                 page_source = driver.page_source
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(page_source)
 
-                page_works = scrape_page_content(page_source, year)
+                page_works, has_next = scrape_page_content(page_source, year)
                 all_metadata.extend(page_works)
                 logging.info(f"Captured {len(page_works)} Original Works from page {page_num}.")
+
+                # If no "Next" button, we have reached the real end of the list
+                if not has_next:
+                    logging.info(f"Reached the definitive end of results for {year} at page {page_num}.")
+                    break
 
                 time.sleep(random.uniform(3.5, 6.5))
 
@@ -185,7 +200,7 @@ def main():
     if all_metadata:
         os.makedirs(OUTPUT_ROOT, exist_ok=True)
         df = pd.DataFrame(all_metadata)
-        # Drop duplicates based on URL to be safe
+        # Drop duplicates based on URL
         df = df.drop_duplicates(subset=['URL'])
         df.to_json(JSONL_OUT, orient='records', lines=True)
         df.to_excel(EXCEL_OUT, index=False)
