@@ -106,7 +106,13 @@ The attempt to access some works may result in a "Consent to AO3 Terms" page. Pl
 
 The two checkboxes must be checked and the `I agree/consent to these Terms` button must be clicked.
 
-## Phase 1 - Data Collection
+## Preliminary Phase 1 - Data Collection
+
+> **Notice**:
+> 
+> This phase is intended to develop a preliminary plan to collect the data necessary to build the corpus.
+> 
+> Before going ahead with the implementation of this plan, formal approval from the project sponsor is required.
 
 AO3's website encodes the entire filter as `URL Query Parameters` which makes the list pages reproducible. It means that parameters can be set directly in the URL to change the filtering.
 
