@@ -39,24 +39,12 @@ get_imds_token() {
     -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
 }
 
-get_instance_id() {
-  local token
-  token="$(get_imds_token)"
+imds_get_with_token() {
+  local token path
+  token="$1"
+  path="$2"
   curl -fsS -H "X-aws-ec2-metadata-token: $token" \
-    "http://169.254.169.254/latest/meta-data/instance-id"
-}
-
-get_region() {
-  local token doc region
-  token="$(get_imds_token)"
-  doc="$(curl -fsS -H "X-aws-ec2-metadata-token: $token" \
-    "http://169.254.169.254/latest/dynamic/instance-identity/document")"
-  region="$(python - <<'PY'
-import json,sys
-print(json.load(sys.stdin)["region"])
-PY
-<<<"$doc")"
-  echo "$region"
+    "http://169.254.169.254/latest/${path}"
 }
 
 stop_instance() {
@@ -65,9 +53,19 @@ stop_instance() {
   # - Have the IAM role 'S3-Admin-Access' attached to the EC2 instance as it allows ec2:StopInstances
   command -v aws >/dev/null 2>&1 || { echo "Error: aws CLI not found" >&2; return 0; }
 
-  local instance_id region
-  instance_id="$(get_instance_id)"
-  region="$(get_region)"
+  local token instance_id region
+  token="$(get_imds_token)" || { echo "Error: failed to get IMDS token; not stopping instance." >&2; return 0; }
+
+  instance_id="$(imds_get_with_token "$token" "meta-data/instance-id")" || return 0
+  region="$(imds_get_with_token "$token" "meta-data/placement/region")" || true
+
+  if [[ -z "${region:-}" ]]; then
+    region="${AWS_REGION:-${AWS_DEFAULT_REGION:-}}"
+  fi
+  if [[ -z "${region:-}" ]]; then
+    echo "Error: AWS region could not be determined; not stopping instance." >&2
+    return 0
+  fi
 
   aws ec2 stop-instances --region "$region" --instance-ids "$instance_id" >/dev/null || true
   echo "Instance $instance_id stop requested in region $region."
@@ -75,7 +73,6 @@ stop_instance() {
 
 main() {
   trap stop_instance EXIT
-
   capture_ao3_lists
 }
 
