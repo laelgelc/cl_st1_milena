@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage:
-#   chmod +x capture_ao3_lists.sh
+#   chmod +x capture_ao3_lists.sh  # Optional if the script is run preceded by 'bash'
 #   nohup bash capture_ao3_lists.sh > process_output.log 2>&1 &
 #   tail -f capture_ao3_lists.log  # Python programme logs
 #   tail -f process_output.log  # Shell processing logs
