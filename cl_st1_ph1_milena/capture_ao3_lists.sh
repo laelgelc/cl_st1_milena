@@ -7,7 +7,11 @@ set -euo pipefail
 #   tail -f capture_ao3_lists.log  # Python programme logs
 #   tail -f process_output.log  # Shell processing logs
 
-# Important: Switch from test (python -u capture_ao3_lists.py --test) to production (python -u capture_ao3_lists.py) mode when ready
+# Important:
+# - Switch from test (python -u capture_ao3_lists.py --test) to production (python -u capture_ao3_lists.py) mode when ready
+# - This bash script is meant to be run on an AWS EC2 instance:
+#   - Have 'aws-cli' installed on the EC2 instance
+#   - Have the IAM role 'S3-Admin-Access' attached to the EC2 instance as it allows ec2:StopInstances
 
 capture_ao3_lists() {
   local venv_activate="$HOME/my_env/bin/activate"
@@ -56,9 +60,9 @@ PY
 }
 
 stop_instance() {
-  # Prereqs:
-  # - aws CLI installed
-  # - instance role allows ec2:StopInstances on itself
+  # Prerequisites:
+  # - Have 'aws-cli' installed on the EC2 instance
+  # - Have the IAM role 'S3-Admin-Access' attached to the EC2 instance as it allows ec2:StopInstances
   command -v aws >/dev/null 2>&1 || { echo "Error: aws CLI not found" >&2; return 0; }
 
   local instance_id region
