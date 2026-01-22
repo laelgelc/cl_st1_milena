@@ -13,6 +13,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, WebDriverException
 
 # Configuration
 INPUT_JSON = "ao3_original_work_lists.json"
@@ -21,9 +22,10 @@ LISTS_DIR = os.path.join(OUTPUT_ROOT, "00_lists")
 JSONL_OUT = os.path.join(OUTPUT_ROOT, "lists.jsonl")
 EXCEL_OUT = os.path.join(OUTPUT_ROOT, "lists.xlsx")
 LOG_FILE = "capture_ao3_lists.log"
+DEBUG_DIR = "debug"
 
 # Selenium / runtime safety
-PAGE_LOAD_TIMEOUT_S = 60
+PAGE_LOAD_TIMEOUT_S_DEFAULT = 120
 SCRIPT_TIMEOUT_S = 60
 WAIT_FOR_WORKS_S = 20
 
@@ -34,7 +36,8 @@ SLEEP_MAX_S = 6.5
 # Recycle browser session periodically (helps long runs)
 RECYCLE_EVERY_N_PAGES = 50
 
-def setup_driver(username: str = "ubuntu") -> webdriver.Firefox:
+
+def setup_driver(username: str = "ubuntu", page_load_timeout_s: int = PAGE_LOAD_TIMEOUT_S_DEFAULT) -> webdriver.Firefox:
     """Initializes a headless Firefox WebDriver with custom settings."""
     options = Options()
     options.add_argument("--headless")
@@ -45,6 +48,10 @@ def setup_driver(username: str = "ubuntu") -> webdriver.Firefox:
         "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
     )
 
+    # Reduce some long-hang cases (network stalls etc.)
+    options.set_preference("network.http.response.timeout", 120)
+    options.set_preference("network.dns.disableIPv6", True)
+
     geckodriver_path = f"/home/{username}/geckodriver/geckodriver"
     service = Service(executable_path=geckodriver_path)
 
@@ -52,10 +59,11 @@ def setup_driver(username: str = "ubuntu") -> webdriver.Firefox:
     driver.set_window_size(1920, 1080)
 
     # Hard timeouts to reduce “infinite hang” scenarios
-    driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_S)
+    driver.set_page_load_timeout(page_load_timeout_s)
     driver.set_script_timeout(SCRIPT_TIMEOUT_S)
 
     return driver
+
 
 def handle_consent(driver: webdriver.Firefox) -> None:
     """Detects and clicks the AO3 Terms of Service consent prompt if present."""
@@ -73,6 +81,67 @@ def handle_consent(driver: webdriver.Firefox) -> None:
     except Exception:
         # Prompt may already be accepted or not present (or AO3 changed markup)
         pass
+
+
+def dump_debug_artifacts(driver: webdriver.Firefox, *, year: int, page_num: int, stage: str) -> None:
+    """Best-effort debug dump (HTML + screenshot) to diagnose EC2-only failures."""
+    try:
+        os.makedirs(DEBUG_DIR, exist_ok=True)
+        ts = time.strftime("%Y%m%d_%H%M%S")
+        prefix = f"{DEBUG_DIR}/year{year}_page{page_num:04d}_{stage}_{ts}"
+        try:
+            driver.save_screenshot(f"{prefix}.png")
+        except Exception:
+            pass
+        try:
+            with open(f"{prefix}.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source or "")
+        except Exception:
+            pass
+        logging.info(f"Saved debug artifacts: {prefix}.(html/png)")
+    except Exception:
+        pass
+
+
+def safe_get(
+        driver: webdriver.Firefox,
+        url: str,
+        *,
+        year: int,
+        page_num: int,
+        attempts: int = 3,
+) -> bool:
+    """
+    Navigate with retries/backoff.
+    EC2 can experience intermittent slow loads / throttling; this makes the run robust.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            driver.get(url)
+            return True
+        except TimeoutException:
+            logging.warning(
+                f"Navigation timed out (attempt {attempt}/{attempts}) for year={year}, page={page_num}, url={url}"
+            )
+            # Stop loading so we can retry without a stuck tab
+            try:
+                driver.execute_script("window.stop();")
+            except Exception:
+                pass
+        except WebDriverException:
+            logging.exception(
+                f"WebDriver error during navigation (attempt {attempt}/{attempts}) "
+                f"for year={year}, page={page_num}, url={url}"
+            )
+
+        if attempt < attempts:
+            backoff_s = 10 * attempt + random.uniform(0, 3)
+            logging.info(f"Retrying after {backoff_s:.1f}s...")
+            time.sleep(backoff_s)
+
+    dump_debug_artifacts(driver, year=year, page_num=page_num, stage="nav_failed")
+    return False
+
 
 def scrape_page_content(html: str, year: int):
     """Parses AO3 list HTML and extracts metadata for work entries."""
@@ -137,6 +206,7 @@ def scrape_page_content(html: str, year: int):
 
     return works_data, has_next
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Capture AO3 work lists and extract metadata.")
     parser.add_argument("--test", "-t", action="store_true", help="Run in test mode (limited pages)")
@@ -154,6 +224,18 @@ def main() -> None:
         default="ubuntu",
         help="System username for geckodriver path (default: ubuntu)",
     )
+    parser.add_argument(
+        "--page-load-timeout",
+        type=int,
+        default=PAGE_LOAD_TIMEOUT_S_DEFAULT,
+        help=f"Selenium page load timeout (seconds, default: {PAGE_LOAD_TIMEOUT_S_DEFAULT})",
+    )
+    parser.add_argument(
+        "--nav-attempts",
+        type=int,
+        default=3,
+        help="Retries for driver.get() navigation timeouts (default: 3)",
+    )
     args = parser.parse_args()
 
     # Logging Setup
@@ -170,7 +252,7 @@ def main() -> None:
     with open(INPUT_JSON, "r", encoding="utf-8") as f:
         year_configs = json.load(f)
 
-    driver = setup_driver(username=args.user)
+    driver = setup_driver(username=args.user, page_load_timeout_s=args.page_load_timeout)
     all_metadata = []
 
     try:
@@ -205,10 +287,15 @@ def main() -> None:
                 url = f"{base_url}{page_num}"
                 logging.info(f"Fetching Page {page_num}: {url}")
 
-                try:
-                    driver.get(url)
-                except Exception:
-                    logging.exception(f"driver.get() failed for page {page_num}. Stopping year {year}.")
+                ok = safe_get(
+                    driver,
+                    url,
+                    year=year,
+                    page_num=page_num,
+                    attempts=args.nav_attempts,
+                )
+                if not ok:
+                    logging.error(f"driver.get() failed for page {page_num}. Stopping year {year}.")
                     break
 
                 handle_consent(driver)
@@ -219,6 +306,7 @@ def main() -> None:
                     )
                 except Exception:
                     logging.error(f"Page {page_num} timed out or is empty. Stopping year {year}.")
+                    dump_debug_artifacts(driver, year=year, page_num=page_num, stage="no_works_timeout")
                     break
 
                 page_source = driver.page_source
@@ -241,7 +329,7 @@ def main() -> None:
                         driver.quit()
                     except Exception:
                         pass
-                    driver = setup_driver(username=args.user)
+                    driver = setup_driver(username=args.user, page_load_timeout_s=args.page_load_timeout)
 
     except Exception:
         logging.exception("Critical Error")
@@ -266,6 +354,7 @@ def main() -> None:
     df.to_json(JSONL_OUT, orient="records", lines=True)
     df.to_excel(EXCEL_OUT, index=False)
     logging.info(f"SUCCESS: {len(df)} total records saved.")
+
 
 if __name__ == "__main__":
     main()
