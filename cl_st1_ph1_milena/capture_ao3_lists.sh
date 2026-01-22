@@ -3,8 +3,11 @@ set -euo pipefail
 
 # Usage:
 #   chmod +x capture_ao3_lists.sh
-#   nohup bash capture_ao3_lists.sh > capture_ao3_lists.log 2>&1 &
-#   tail -f capture_ao3_lists.log
+#   nohup bash capture_ao3_lists.sh > process_output.log 2>&1 &
+#   tail -f capture_ao3_lists.log  # Python programme logs
+#   tail -f process_output.log  # Shell processing logs
+
+# Important: Switch from test (python -u capture_ao3_lists.py --test) to production (python -u capture_ao3_lists.py) mode when ready
 
 capture_ao3_lists() {
   local venv_activate="$HOME/my_env/bin/activate"
@@ -56,19 +59,20 @@ stop_instance() {
   # Prereqs:
   # - aws CLI installed
   # - instance role allows ec2:StopInstances on itself
-  command -v aws >/dev/null 2>&1 || { echo "Error: aws CLI not found" >&2; exit 1; }
+  command -v aws >/dev/null 2>&1 || { echo "Error: aws CLI not found" >&2; return 0; }
 
   local instance_id region
   instance_id="$(get_instance_id)"
   region="$(get_region)"
 
-  aws ec2 stop-instances --region "$region" --instance-ids "$instance_id" >/dev/null
+  aws ec2 stop-instances --region "$region" --instance-ids "$instance_id" >/dev/null || true
   echo "Instance $instance_id stop requested in region $region."
 }
 
 main() {
+  trap stop_instance EXIT
+
   capture_ao3_lists
-  stop_instance
 }
 
 main "$@"
