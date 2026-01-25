@@ -37,7 +37,7 @@ SLEEP_MAX_S = 6.5
 RECYCLE_EVERY_N_PAGES = 50
 
 
-def setup_driver(page_load_timeout_s: int = PAGE_LOAD_TIMEOUT_S_DEFAULT) -> webdriver.Firefox:
+def setup_driver(username: str = "ubuntu", page_load_timeout_s: int = PAGE_LOAD_TIMEOUT_S_DEFAULT) -> webdriver.Firefox:
     """Initializes a headless Firefox WebDriver with custom settings."""
     options = Options()
     options.add_argument("--headless")
@@ -52,8 +52,8 @@ def setup_driver(page_load_timeout_s: int = PAGE_LOAD_TIMEOUT_S_DEFAULT) -> webd
     options.set_preference("network.http.response.timeout", 120)
     options.set_preference("network.dns.disableIPv6", True)
 
-    # Let Selenium Manager locate/download the correct geckodriver and cache it
-    service = Service()
+    geckodriver_path = f"/home/{username}/geckodriver/geckodriver"
+    service = Service(executable_path=geckodriver_path)
 
     driver = webdriver.Firefox(service=service, options=options)
     driver.set_window_size(1920, 1080)
@@ -218,6 +218,13 @@ def main() -> None:
         help="Pages to capture per year in test mode (default: 5)",
     )
     parser.add_argument(
+        "--user",
+        "-u",
+        type=str,
+        default="ubuntu",
+        help="System username for geckodriver path (default: ubuntu)",
+    )
+    parser.add_argument(
         "--page-load-timeout",
         type=int,
         default=PAGE_LOAD_TIMEOUT_S_DEFAULT,
@@ -245,7 +252,7 @@ def main() -> None:
     with open(INPUT_JSON, "r", encoding="utf-8") as f:
         year_configs = json.load(f)
 
-    driver = setup_driver(page_load_timeout_s=args.page_load_timeout)
+    driver = setup_driver(username=args.user, page_load_timeout_s=args.page_load_timeout)
     all_metadata = []
 
     try:
@@ -322,7 +329,7 @@ def main() -> None:
                         driver.quit()
                     except Exception:
                         pass
-                    driver = setup_driver(page_load_timeout_s=args.page_load_timeout)
+                    driver = setup_driver(username=args.user, page_load_timeout_s=args.page_load_timeout)
 
     except Exception:
         logging.exception("Critical Error")
