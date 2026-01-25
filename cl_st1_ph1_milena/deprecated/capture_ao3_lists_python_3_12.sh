@@ -14,32 +14,23 @@ set -euo pipefail
 #   - Have the IAM role 'S3-Admin-Access' attached to the EC2 instance as it allows ec2:StopInstances
 
 capture_ao3_lists() {
-  local conda_sh
-  local conda_env_name="my_env"
-
-  # Typical Miniconda install location; adjust if yours differs.
-  conda_sh="$HOME/miniconda3/etc/profile.d/conda.sh"
-  if [[ ! -f "$conda_sh" ]]; then
-    echo "Error: conda.sh not found at: $conda_sh" >&2
-    echo "Set conda_sh to your Miniconda location (e.g., $HOME/miniconda3/...)." >&2
+  local venv_activate="$HOME/my_env/bin/activate"
+  if [[ ! -f "$venv_activate" ]]; then
+    echo "Error: Virtualenv activate script not found at: $venv_activate" >&2
     exit 1
   fi
 
   # shellcheck disable=SC1090
-  source "$conda_sh"
+  source "$venv_activate"
 
-  conda activate "$conda_env_name"
-
-  if [[ "${CONDA_DEFAULT_ENV:-}" != "$conda_env_name" ]]; then
-    echo "Error: conda environment '$conda_env_name' not activated!" >&2
+  if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+    echo "Error: Virtual environment not activated!" >&2
     exit 1
   fi
 
   # -u makes logs stream immediately (useful with nohup)
   #python -u capture_ao3_lists.py
   python -u capture_ao3_lists.py --test
-
-  conda deactivate || true
 }
 
 get_imds_token() {
