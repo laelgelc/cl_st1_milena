@@ -31,7 +31,6 @@ capture_ao3_lists() {
   # -u makes logs stream immediately (useful with nohup)
   #python -u capture_ao3_lists.py
   python -u capture_ao3_lists.py --test
-  #python -u capture_ao3_lists.py --test --user eyamrog
 }
 
 get_imds_token() {
