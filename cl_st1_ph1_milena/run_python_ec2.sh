@@ -14,11 +14,25 @@ set -euo pipefail
 #   tail -f process_output.log
 #   tail -f dummy.log
 
+# ---------------------------------------------------------------------------
 # Configuration
-CONDA_ENV_NAME="my_env"              # Change to your environment name
+# ---------------------------------------------------------------------------
+
+CONDA_ENV_NAME="my_env"  # Change to your environment name
 CONDA_SH="${HOME}/miniconda3/etc/profile.d/conda.sh"  # Adjust if Miniconda/conda is elsewhere
 
-# --- Python runner ----------------------------------------------------------
+# SNS topic to notify when the instance is about to be stopped.
+# Ensure the instance role has sns:Publish permission on this ARN.
+SNS_TOPIC_ARN="arn:aws:sns:sa-east-1:849468635108:ec2-stop-notifications"
+SNS_REGION="sa-east-1"  # Region of the SNS topic above
+
+# Will be set in main(), used for notifications
+SCRIPT_INVOCATION=""
+
+
+# ---------------------------------------------------------------------------
+# Python runner
+# ---------------------------------------------------------------------------
 
 run_python_program() {
   if [[ $# -lt 1 ]]; then
@@ -52,7 +66,10 @@ run_python_program() {
   conda deactivate || true
 }
 
-# --- EC2 helper functions ---------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# EC2 + SNS helper functions
+# ---------------------------------------------------------------------------
 
 get_imds_token() {
   curl -fsS -X PUT "http://169.254.169.254/latest/api/token" \
@@ -67,14 +84,76 @@ imds_get_with_token() {
     "http://169.254.169.254/latest/${path}"
 }
 
+notify_shutdown() {
+  # Sends a notification to SNS that this instance is being stopped.
+  # Expects: $1 = instance_id, $2 = region (instance region)
+  local instance_id="$1"
+  local instance_region="$2"
+
+  # SNS notification is optional: if not configured or aws CLI missing, just skip.
+  if [[ -z "${SNS_TOPIC_ARN:-}" ]]; then
+    echo "Info: SNS_TOPIC_ARN not set; skipping SNS notification." >&2
+    return 0
+  fi
+
+  command -v aws >/dev/null 2>&1 || {
+    echo "Warning: aws CLI not found; skipping SNS notification." >&2
+    return 0
+  }
+
+  local sns_region="${SNS_REGION:-}"
+  if [[ -z "$sns_region" ]]; then
+    # Fallback: try to extract region from ARN (4th colon-separated field)
+    # arn:partition:service:region:account-id:resource
+    sns_region="$(echo "$SNS_TOPIC_ARN" | awk -F: '{print $4}')"
+  fi
+
+  if [[ -z "$sns_region" ]]; then
+    echo "Warning: SNS region could not be determined; skipping SNS notification." >&2
+    return 0
+  fi
+
+  local subject="EC2 instance stopping: ${instance_id}"
+  local message
+  message=$(
+    cat <<EOF
+EC2 instance is being stopped.
+
+Instance ID : ${instance_id}
+Instance Region : ${instance_region}
+SNS Region : ${sns_region}
+
+Script invocation:
+${SCRIPT_INVOCATION}
+EOF
+  )
+
+  # Fire-and-forget notification
+  aws sns publish \
+    --region "$sns_region" \
+    --topic-arn "$SNS_TOPIC_ARN" \
+    --subject "$subject" \
+    --message "$message" >/dev/null 2>&1 || {
+      echo "Warning: failed to publish shutdown notification to SNS." >&2
+    }
+}
+
 stop_instance() {
   # Prerequisites (when used on EC2):
   # - aws CLI installed
-  # - IAM role attached that allows ec2:StopInstances on this instance
-  command -v aws >/dev/null 2>&1 || { echo "Warning: aws CLI not found; not stopping instance." >&2; return 0; }
+  # - IAM role attached that allows:
+  #   - ec2:StopInstances on this instance
+  #   - sns:Publish on the configured SNS topic
+  command -v aws >/dev/null 2>&1 || {
+    echo "Warning: aws CLI not found; not stopping instance." >&2
+    return 0
+  }
 
   local token instance_id region
-  token="$(get_imds_token)" || { echo "Warning: failed to get IMDS token; not stopping instance." >&2; return 0; }
+  token="$(get_imds_token)" || {
+    echo "Warning: failed to get IMDS token; not stopping instance." >&2
+    return 0
+  }
 
   instance_id="$(imds_get_with_token "$token" "meta-data/instance-id")" || return 0
   region="$(imds_get_with_token "$token" "meta-data/placement/region")" || true
@@ -87,22 +166,34 @@ stop_instance() {
     return 0
   fi
 
+  # Try to send SNS notification first (non-fatal if it fails)
+  notify_shutdown "$instance_id" "$region" || true
+
+  # Then request instance stop
   aws ec2 stop-instances --region "$region" --instance-ids "$instance_id" >/dev/null || true
   echo "Instance $instance_id stop requested in region $region."
 }
 
-# --- Main -------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 main() {
+  # Capture how this script was invoked (for inclusion in the SNS message)
+  SCRIPT_INVOCATION="$0 $*"
+
   # Always attempt to stop the instance when this script exits (success or failure).
   # If you only want to stop on success, move stop_instance after run_python_program
   # and remove this trap.
+  #
   # For instance:
-  #main() {
-  #      if run_python_program "$@"; then
-  #        stop_instance
-  #      fi
-  #    }
+  #   main() {
+  #     SCRIPT_INVOCATION="$0 $*"
+  #     if run_python_program "$@"; then
+  #       stop_instance
+  #     fi
+  #   }
   trap stop_instance EXIT
 
   run_python_program "$@"
