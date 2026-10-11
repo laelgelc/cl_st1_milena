@@ -19,7 +19,7 @@ Therefore, the recommended method is to use Selenium because it emulates a human
 
 ### Scraping the works in English tagged as `Original Work`
 
-The list of works in English tagged as `Original Work` is:
+The list of works tagged as `Original Work` is:
 
 - https://archiveofourown.org/tags/Original%20Work/works
 
