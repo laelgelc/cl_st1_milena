@@ -1,0 +1,121 @@
+{
+  "collection_name": "ao3_original_work_english_lists_2026_2019",
+  "collection_phase": "Phase 1 - Data Collection",
+  "collection_subphase": "Lists Collection",
+  "created_on": "2026-10-12",
+  "source_note": "AO3 list URL ranges documented as of 12/10/2026.",
+  "base_url": "https://archiveofourown.org/works",
+  "range_order": "descending_year",
+  "page_order_within_year": "ascending_page",
+  "output_file_pattern": "{year}_{page:04d}.html",
+  "description": "Capture AO3 Works list pages for English works tagged as Original Work, excluding crossovers, grouped by Date Updated yearly ranges from 2026 down to 2019.",
+  "filters": {
+    "sort_column": "revised_at",
+    "other_tag_names": "",
+    "excluded_tag_names": "",
+    "crossover": "F",
+    "complete": "",
+    "words_from": "",
+    "words_to": "",
+    "query": "",
+    "language_id": "en",
+    "commit": "Sort and Filter",
+    "tag_id": "Original Work"
+  },
+  "ao3_query_parameter_map": {
+    "sort_column": "work_search[sort_column]",
+    "other_tag_names": "work_search[other_tag_names]",
+    "excluded_tag_names": "work_search[excluded_tag_names]",
+    "crossover": "work_search[crossover]",
+    "complete": "work_search[complete]",
+    "words_from": "work_search[words_from]",
+    "words_to": "work_search[words_to]",
+    "date_from": "work_search[date_from]",
+    "date_to": "work_search[date_to]",
+    "query": "work_search[query]",
+    "language_id": "work_search[language_id]",
+    "commit": "commit",
+    "tag_id": "tag_id",
+    "page": "page"
+  },
+  "ranges": [
+    {
+      "year": 2026,
+      "date_from": "2026-01-01",
+      "date_to": "2026-12-31",
+      "expected_works": 75852,
+      "page_from": 1,
+      "page_to": 3793
+    },
+    {
+      "year": 2025,
+      "date_from": "2025-01-01",
+      "date_to": "2025-12-31",
+      "expected_works": 62624,
+      "page_from": 1,
+      "page_to": 3132
+    },
+    {
+      "year": 2024,
+      "date_from": "2024-01-01",
+      "date_to": "2024-12-31",
+      "expected_works": 45720,
+      "page_from": 1,
+      "page_to": 2286
+    },
+    {
+      "year": 2023,
+      "date_from": "2023-01-01",
+      "date_to": "2023-12-31",
+      "expected_works": 37817,
+      "page_from": 1,
+      "page_to": 1891
+    },
+    {
+      "year": 2022,
+      "date_from": "2022-01-01",
+      "date_to": "2022-12-31",
+      "expected_works": 29197,
+      "page_from": 1,
+      "page_to": 1460
+    },
+    {
+      "year": 2021,
+      "date_from": "2021-01-01",
+      "date_to": "2021-12-31",
+      "expected_works": 22574,
+      "page_from": 1,
+      "page_to": 1129
+    },
+    {
+      "year": 2020,
+      "date_from": "2020-01-01",
+      "date_to": "2020-12-31",
+      "expected_works": 16422,
+      "page_from": 1,
+      "page_to": 822
+    },
+    {
+      "year": 2019,
+      "date_from": "2019-01-01",
+      "date_to": "2019-12-31",
+      "expected_works": 10613,
+      "page_from": 1,
+      "page_to": 531
+    }
+  ],
+  "plan_summary": {
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023,
+      2022,
+      2021,
+      2020,
+      2019
+    ],
+    "total_expected_works": 300819,
+    "total_pages": 15044
+  }
+}

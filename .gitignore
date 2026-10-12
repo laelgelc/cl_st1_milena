@@ -222,6 +222,8 @@ __marimo__/
 # cl_st1_milena
 !cl_st1_ph0_milena/env
 !cl_st1_ph0_milena/**/*.log
+!cl_st1_preph1_milena/env
+!cl_st1_preph1_milena/**/*.log
 !cl_st1_ph1_milena/env
 !cl_st1_ph1_milena/**/*.log
 !cl_st1_ph2_milena/env

@@ -246,3 +246,10 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2019-01-01&work_search[date_to]=2019-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=531
 ```
+
+## Phase 1 - Data Collection
+
+### Lists Collection
+
+
+### Works Collection
