@@ -35,15 +35,15 @@ This list's maximum length is 5,000 pages long, and each page contains 20 works.
 Each of the list pages can be captured using Selenium. For instance, the first page can be captured as follows:
 
 ```
-(my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ python getwebpageselenium.py ao3_index_1 "https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=&work_search[date_to]=&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1"
-Successfully saved HTML to ao3_index_1.html
-Successfully saved extracted text to ao3_index_1.txt
+(my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ python getwebpageselenium.py ao3_list_1 "https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=&work_search[date_to]=&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1"
+Successfully saved HTML to ao3_list_1.html
+Successfully saved extracted text to ao3_list_1.txt
 (my_env) eyamrog@eyamrog-iMac:~/PycharmProjects/cl_st1_milena/cl_st1_ph0_milena$ 
 ```
 
 Click [captured first list page](cl_st1_ph0_milena/ao3_list_1.html) to see it. 
 
-Each work's URL can be captured from the corresponding page's HTML code. For instance, for the work [Pan's Shenaniganery](https://archiveofourown.org/works/76671106?view_full_work=true), the full URL can be composed as follows:
+Each work's URL can be captured from the corresponding list page's HTML code. For instance, for the work [Pan's Shenaniganery](https://archiveofourown.org/works/76671106?view_full_work=true), the full URL can be composed as follows:
 
 - From the title's `href` attribute: /works/76671106
 - The full URL: https://archiveofourown.org/works/76671106
@@ -112,7 +112,7 @@ The two checkboxes must be checked and the `I agree/consent to these Terms` butt
 > 
 > This phase is intended to develop a preliminary plan to collect the data necessary to build the corpus.
 > 
-> Before going ahead with the implementation of this plan, formal approval from the project sponsor is required.
+> Before going ahead with the implementation of this plan, formal approval from the researcher's advisor is required.
 
 AO3's website encodes the entire filter as `URL Query Parameters` which makes the list pages reproducible. It means that parameters can be set directly in the URL to change the filtering.
 
