@@ -165,9 +165,9 @@ This study focuses on Original Works in English. The data collection strategy is
 
 If the study is extended to consider AI, works dated (`Date Updated`) before the advent of ChatGPT on 30th November 2022 can be considered as human-authored works.
 
-### List URL ranges
+### List URL ranges (as of 12/10/2026)
 
-Year: 2026 (as of 12/10/2026)
+Year: 2026
 
 75,852 Works in Original Work
 
