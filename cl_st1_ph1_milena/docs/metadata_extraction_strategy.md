@@ -369,3 +369,379 @@ collection_year
 
 
 This would represent the **date-range stratum used to capture the list page**, while `date_updated` represents the **actual work date shown on the blurb**. In most cases they should agree, but keeping them separate is useful for QC.
+
+## Me
+Please refer to the attached AI Assistant chat. Let's work on the `extract_ao3_works_metadata.py` programme development specification, titled `# `extract_ao3_works_metadata.py` — Programme Specification for Development`. Consider the suggested `collection_year` field, to the right of the `date_updated_raw` field. Should the input be the `cl_st1_ph1_milena/corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json` file? The output could be the `cl_st1_ph1_milena/corpus/00_sources/ao3_works_metadata` file in NDJSON, TSV and XLSX formats. Is it clear? Am I missing something?
+
+## AI Assistant
+Yes — it is clear, and your proposed design is sensible.
+
+## Short answer
+
+The input should be:
+
+```plain text
+cl_st1_ph1_milena/corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+```
+
+
+because that manifest is the best **source-of-truth index** for the captured list pages. It tells `extract_ao3_works_metadata.py`:
+
+- which HTML files exist or were attempted;
+- their `page_id`;
+- their `year`;
+- their AO3 list page number;
+- their original/requested URL;
+- their `output_path`;
+- whether capture succeeded.
+
+The extractor should then read only manifest pages with:
+
+```plain text
+status == "success"
+```
+
+
+and parse each corresponding saved HTML file.
+
+The output should go under something like:
+
+```plain text
+cl_st1_ph1_milena/corpus/00_sources/ao3_works_metadata/
+```
+
+
+not as a single “file” path, because you want multiple output formats.
+
+For example:
+
+```plain text
+cl_st1_ph1_milena/corpus/00_sources/ao3_works_metadata/
+  ao3_works_metadata.ndjson
+  ao3_works_metadata.tsv
+  ao3_works_metadata.xlsx
+  extract_ao3_works_metadata_manifest.json
+  extract_ao3_works_metadata.log
+```
+
+
+## About `collection_year`
+
+Yes, I would include `collection_year`, positioned immediately to the right of `date_updated_raw`.
+
+The relevant date fields would therefore be:
+
+```plain text
+date_updated
+date_updated_raw
+collection_year
+```
+
+
+Where:
+
+| Field              | Meaning                                                              |
+|--------------------|----------------------------------------------------------------------|
+| `date_updated`     | Machine-readable parsed AO3 blurb date, e.g. `2026-10-13`.           |
+| `date_updated_raw` | Original AO3 display date, e.g. `13 Oct 2026`.                       |
+| `collection_year`  | The yearly stratum from the manifest/list capture plan, e.g. `2026`. |
+
+This is useful because `collection_year` represents the **query stratum**, while `date_updated` represents the **actual date displayed in the work blurb**. They should normally match, but keeping both supports QC.
+
+## Suggested input/output specification
+
+### Input
+
+Primary input:
+
+```plain text
+--manifest corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+```
+
+
+The programme should read:
+
+```json
+{
+  "pages": [
+    {
+      "page_id": "2026_0001",
+      "year": 2026,
+      "page": 1,
+      "url": "...",
+      "current_url": "...",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0001.html",
+      "status": "success"
+    }
+  ]
+}
+```
+
+
+For each successful page, it should parse:
+
+```plain text
+output_path
+```
+
+
+and add page/list provenance to every extracted work row.
+
+### Output
+
+Recommended default output directory:
+
+```plain text
+--output-dir corpus/00_sources/ao3_works_metadata
+```
+
+
+Recommended files:
+
+```plain text
+ao3_works_metadata.ndjson
+ao3_works_metadata.tsv
+ao3_works_metadata.xlsx
+extract_ao3_works_metadata_manifest.json
+extract_ao3_works_metadata.log
+```
+
+
+The **NDJSON** should be the canonical machine-readable output. TSV and XLSX are convenient analysis/inspection exports.
+
+## Suggested metadata column order
+
+With `collection_year` inserted after `date_updated_raw`, I would use this final order:
+
+```plain text
+work_id
+title
+work_url
+full_work_url
+author_name
+author_url
+is_anonymous
+gift_recipient
+gift_recipient_url
+fandoms
+fandom_urls
+rating
+archive_warnings
+categories
+completion_status
+date_updated
+date_updated_raw
+collection_year
+warning_tags
+relationship_tags
+character_tags
+freeform_tags
+tag_urls
+summary_text
+summary_html
+series
+language
+language_code
+words
+chapters_current
+chapters_total
+latest_chapter_url
+collections
+comments
+kudos
+bookmarks
+hits
+source_page_id
+source_list_page
+source_list_url
+source_html_path
+extraction_run_id
+```
+
+
+I would add the final provenance fields even though they are not “AO3 work metadata” strictly speaking. They are extremely useful for debugging, reproducibility, and later QC.
+
+## Things you might be missing
+
+Only a few design details should be clarified in the specification.
+
+### 1. Directory vs file naming
+
+You wrote:
+
+> output could be the `cl_st1_ph1_milena/corpus/00_sources/ao3_works_metadata` file
+
+I would define this as a **directory**, not a file, because it will contain several outputs.
+
+Better:
+
+```plain text
+cl_st1_ph1_milena/corpus/00_sources/ao3_works_metadata/
+```
+
+
+### 2. Array/list fields in TSV and XLSX
+
+Several fields are naturally lists:
+
+```plain text
+fandoms
+archive_warnings
+categories
+relationship_tags
+character_tags
+freeform_tags
+series
+tag_urls
+```
+
+
+In NDJSON they can remain proper JSON arrays/objects.
+
+But in TSV/XLSX, you need a policy. I recommend serialising list/object fields as compact JSON strings rather than joining with semicolons, because AO3 tags can themselves contain punctuation.
+
+Example TSV/XLSX cell:
+
+```json
+["Graphic Depictions Of Violence","Rape/Non-Con"]
+```
+
+
+### 3. Missing stats policy
+
+AO3 sometimes omits zero-valued stats such as comments, kudos, bookmarks, and collections.
+
+You should decide whether omitted stats become:
+
+```plain text
+null
+```
+
+
+or:
+
+```plain text
+0
+```
+
+
+For analysis, `0` is often convenient. For strict representation, `null` means “not present in page HTML”.
+
+My recommendation:
+
+- use `0` for omitted count fields when AO3 conventionally omits zero values;
+- optionally include no extra “present” fields unless needed.
+
+So:
+
+```plain text
+collections
+comments
+kudos
+bookmarks
+```
+
+
+would be integers defaulting to `0` if absent.
+
+`hits` should also be an integer and is usually present, including `0`.
+
+### 4. Duplicate work handling
+
+Because AO3 list pages can shift over time, duplicate works could theoretically appear across captured pages, especially in volatile years.
+
+The extractor should either:
+
+1. output every occurrence and flag duplicates later; or
+2. deduplicate by `work_id`.
+
+For the first version, I recommend **do not silently deduplicate**. Instead:
+
+- output all rows;
+- include `source_page_id`;
+- include an extraction manifest summary with duplicate counts by `work_id`.
+
+That preserves auditability.
+
+### 5. Extraction manifest
+
+Besides the data files, create a manifest such as:
+
+```plain text
+extract_ao3_works_metadata_manifest.json
+```
+
+
+It should record:
+
+- extraction run ID;
+- input manifest path;
+- output files;
+- number of pages in input manifest;
+- number of successful pages selected;
+- number of pages parsed;
+- number of works extracted;
+- pages with parse errors;
+- duplicate `work_id` count;
+- tool version;
+- timestamp.
+
+### 6. Error handling
+
+The specification should say what happens if:
+
+- an HTML file listed in the manifest is missing;
+- a page has no work blurbs;
+- a work blurb is partially malformed;
+- a date cannot be parsed;
+- a number cannot be parsed.
+
+Recommended policy:
+
+- page-level failures go into the extraction manifest/log;
+- malformed individual works should still produce a partial row if `work_id` and `title` are recoverable;
+- unparseable fields become `null`;
+- parsing warnings are counted.
+
+### 7. Naming of `date_updated`
+
+Since the AO3 list is sorted/filtered by `revised_at`, `date_updated` is appropriate. The raw field protects against any ambiguity.
+
+### 8. Current manifest vs timestamped manifest
+
+Using:
+
+```plain text
+capture_ao3_lists_manifest.json
+```
+
+
+as the default is fine because it is the “latest/current” manifest.
+
+But the CLI should allow using a timestamped manifest too:
+
+```plain text
+--manifest corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261013T075915Z.json
+```
+
+
+That helps reproduce a specific capture run.
+
+## Recommended clarification sentence for the spec
+
+You could phrase the programme scope like this:
+
+> `extract_ao3_works_metadata.py` is an offline metadata extraction programme. It reads the AO3 list capture manifest, selects successfully captured list pages, parses the corresponding saved HTML files, extracts work-level metadata in list order, and exports the result to NDJSON, TSV, and XLSX under `corpus/00_sources/ao3_works_metadata/`. The programme does not make network requests.
+
+## Bottom line
+
+You are not missing anything major. I would only tighten three points:
+
+1. Treat `ao3_works_metadata` as an **output directory**, not a single file.
+2. Add provenance fields and an extraction manifest.
+3. Define serialisation and missing-value policies for list fields and omitted stats.
+
+Otherwise, yes: **manifest in, metadata files out** is exactly the right architecture.
+
+## Me
+I agree with your recommendations. I think we've got it covered enough. Please go ahead and write the programme development specification.
