@@ -26,3 +26,11 @@ bash run_python_ec2.sh \
     --request-delay 3 \
     --request-jitter 1
 ```
+
+### 1.2. Extract Metadata
+
+#### Default extraction
+
+```shell
+python extract_ao3_works_metadata.py
+```
