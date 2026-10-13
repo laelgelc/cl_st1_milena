@@ -10,6 +10,19 @@ cl_st1_ph2_milena/
 
 ### 1.1. Lists Collection
 
-```shell
+#### Test run with 10 pages
 
+```shell
+python capture_ao3_lists.py --test-limit 10
+```
+
+#### EC2 full run with `tmux`
+
+```shell
+bash run_python_ec2.sh \
+    capture_ao3_lists.py \
+    --no-test-mode \
+    --browser chrome \
+    --request-delay 3 \
+    --request-jitter 1
 ```
