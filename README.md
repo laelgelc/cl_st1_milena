@@ -34,7 +34,7 @@ Applying the filter `Language:English` yields the following list:
 
 - https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work
 
-This list's maximum length is 5,000 pages long, and each page contains 20 works. Therefore, the list contains 100,000 works. This is a portion of the total number of works, which was 335,768 works in 15/01/2026, at the time of writing this document.
+This list's maximum length is 5000 pages long, and each page contains 20 works. Therefore, the list contains 100000 works. This is a portion of the total number of works, which was 335768 works in 15/01/2026, at the time of writing this document.
 
 - From: https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=&work_search[date_to]=&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 - To: https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=&work_search[date_to]=&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=5000
@@ -72,8 +72,8 @@ Click [raw text](cl_st1_ph0_milena/ao3_work_1.txt) to see it.
 Notes:
 
 - Each web page capture takes about 3 seconds
-- Capturing the 5,000 list pages will take about 4.17 hours
-- Capturing the 100,000 works will take about 3.47 days.
+- Capturing the 5000 list pages will take about 4.17 hours
+- Capturing the 100000 works will take about 3.47 days.
 
 #### "Adult Content" warning page
 
@@ -160,7 +160,7 @@ This study focuses on Original Works in English. The data collection strategy is
     - URL
 3. Inspect each year's dataset for fandom misclassified works, crossovers, works with mismatched languages, etc. and remove them
 4. Perform a descriptive statistics analysis (boxplot) of the dataset (entirely or per year, the one that is best) on the `Words` column to decide if outliers (too short or too long works) should be removed
-5. Randomly select 1,000 works from each year's dataset, targeting the compilation of a corpus with 6,000 works. In principle, we intend to extract 1,000 keywords from the 6 yearly strata as factor analysis variables. As there should be at least 5 works per variable (5,000 works), a corpus size of 6,000 works is a reasonable target
+5. Randomly select 1000 works from each year's dataset, targeting the compilation of a corpus with 6000 works. In principle, we intend to extract 1000 keywords from the 6 yearly strata as factor analysis variables. As there should be at least 5 works per variable (5000 works), a corpus size of 6000 works is a reasonable target
 6. Capture the full text of the selected works as HTML files and, preferably, re-extract the metadata from them as some of them could have changed since the original capture
 
 If the study is extended to consider AI, works dated (`Date Updated`) before the advent of ChatGPT on 30th November 2022 can be considered as human-authored works.
