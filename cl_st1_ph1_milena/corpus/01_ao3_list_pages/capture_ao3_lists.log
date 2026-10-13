@@ -1,0 +1,47 @@
+[2026-10-13 04:59:15] INFO  Starting capture_ao3_lists.py run_id=20261013T075915Z
+[2026-10-13 04:59:15] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
+[2026-10-13 04:59:15] INFO  Output directory: corpus/01_ao3_list_pages
+[2026-10-13 04:59:15] INFO  Log file: corpus/01_ao3_list_pages/capture_ao3_lists.log
+[2026-10-13 04:59:15] INFO  Manifest file: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-13 04:59:15] INFO  Browser: chrome; headless=True
+[2026-10-13 04:59:15] INFO  Chrome server flags: True
+[2026-10-13 04:59:15] INFO  Test mode: True; test_limit=10
+[2026-10-13 04:59:15] INFO  Reprocess: False
+[2026-10-13 04:59:15] INFO  Workers: 1
+[2026-10-13 04:59:15] INFO  Timeout seconds: 30
+[2026-10-13 04:59:15] INFO  Max retries: 2
+[2026-10-13 04:59:15] INFO  Retry delay seconds: 10
+[2026-10-13 04:59:15] INFO  Request delay seconds: 3.0
+[2026-10-13 04:59:15] INFO  Request jitter seconds: 1.0
+[2026-10-13 04:59:15] INFO  Start page ID: None
+[2026-10-13 04:59:15] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
+[2026-10-13 04:59:15] INFO  Range order: descending_year
+[2026-10-13 04:59:15] INFO  Page order within year: ascending_page
+[2026-10-13 04:59:15] INFO  Total pages in plan: 15056
+[2026-10-13 04:59:15] INFO  Skipped existing pages: 0
+[2026-10-13 04:59:15] INFO  Planned capture attempts: 10
+[2026-10-13 04:59:15] INFO  Creating Selenium browser session
+[2026-10-13 04:59:16] INFO  Capturing 2026_0001 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+[2026-10-13 04:59:40] INFO  SUCCESS 2026_0001 -> corpus/01_ao3_list_pages/2026/2026_0001.html work_items=20
+[2026-10-13 04:59:44] INFO  Capturing 2026_0002 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=2
+[2026-10-13 04:59:46] INFO  SUCCESS 2026_0002 -> corpus/01_ao3_list_pages/2026/2026_0002.html work_items=20
+[2026-10-13 04:59:50] INFO  Capturing 2026_0003 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3
+[2026-10-13 04:59:56] INFO  SUCCESS 2026_0003 -> corpus/01_ao3_list_pages/2026/2026_0003.html work_items=20
+[2026-10-13 04:59:59] INFO  Capturing 2026_0004 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=4
+[2026-10-13 05:00:03] INFO  SUCCESS 2026_0004 -> corpus/01_ao3_list_pages/2026/2026_0004.html work_items=20
+[2026-10-13 05:00:06] INFO  Capturing 2026_0005 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=5
+[2026-10-13 05:00:14] INFO  SUCCESS 2026_0005 -> corpus/01_ao3_list_pages/2026/2026_0005.html work_items=20
+[2026-10-13 05:00:18] INFO  Capturing 2026_0006 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=6
+[2026-10-13 05:00:22] INFO  SUCCESS 2026_0006 -> corpus/01_ao3_list_pages/2026/2026_0006.html work_items=20
+[2026-10-13 05:00:26] INFO  Capturing 2026_0007 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=7
+[2026-10-13 05:00:30] INFO  SUCCESS 2026_0007 -> corpus/01_ao3_list_pages/2026/2026_0007.html work_items=20
+[2026-10-13 05:00:34] INFO  Capturing 2026_0008 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=8
+[2026-10-13 05:00:40] INFO  SUCCESS 2026_0008 -> corpus/01_ao3_list_pages/2026/2026_0008.html work_items=20
+[2026-10-13 05:00:44] INFO  Capturing 2026_0009 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=9
+[2026-10-13 05:00:51] INFO  SUCCESS 2026_0009 -> corpus/01_ao3_list_pages/2026/2026_0009.html work_items=20
+[2026-10-13 05:00:54] INFO  Capturing 2026_0010 https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=10
+[2026-10-13 05:01:00] INFO  SUCCESS 2026_0010 -> corpus/01_ao3_list_pages/2026/2026_0010.html work_items=20
+[2026-10-13 05:01:03] INFO  Closing Selenium browser session
+[2026-10-13 05:01:03] INFO  Wrote latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-13 05:01:03] INFO  Wrote per-run manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261013T075915Z.json
+[2026-10-13 05:01:03] INFO  Finished run: succeeded=10 failed=0 skipped_existing=0

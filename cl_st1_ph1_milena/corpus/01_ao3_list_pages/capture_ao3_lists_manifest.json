@@ -1,0 +1,256 @@
+{
+  "run_metadata": {
+    "run_id": "20261013T075915Z",
+    "tool_name": "capture_ao3_lists.py",
+    "tool_version": "v1",
+    "collection_name": "ao3_original_work_english_lists_2026_2019",
+    "start_time": "2026-10-13T07:59:15Z",
+    "end_time": "2026-10-13T08:01:03Z",
+    "test_mode": true,
+    "test_limit": 10,
+    "reprocess": false,
+    "workers": 1,
+    "collection_plan": "corpus/00_sources/ao3_list_collection_plan.json",
+    "output_dir": "corpus/01_ao3_list_pages",
+    "log_file": "corpus/01_ao3_list_pages/capture_ao3_lists.log",
+    "manifest_file": "corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json",
+    "interrupted": false,
+    "config": {
+      "browser": "chrome",
+      "headless": true,
+      "chrome_server_flags": true,
+      "timeout_seconds": 30,
+      "max_retries": 2,
+      "retry_delay_seconds": 10,
+      "request_delay_seconds": 3.0,
+      "request_jitter_seconds": 1.0,
+      "start_page_id": null
+    },
+    "plan_summary": {
+      "range_order": "descending_year",
+      "page_order_within_year": "ascending_page",
+      "years": [
+        2026,
+        2025,
+        2024,
+        2023,
+        2022,
+        2021,
+        2020,
+        2019
+      ],
+      "total_pages_in_plan": 15056,
+      "total_expected_works": 301055
+    },
+    "summary": {
+      "selected_pages": 10,
+      "planned_attempts": 10,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "skipped_existing": 0
+    }
+  },
+  "pages": [
+    {
+      "page_id": "2026_0001",
+      "year": 2026,
+      "page": 1,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0001.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 24.2,
+      "start_time": "2026-10-13T07:59:16Z",
+      "end_time": "2026-10-13T07:59:40Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "1 - 20 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0002",
+      "year": 2026,
+      "page": 2,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=2",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=2",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0002.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 2.018,
+      "start_time": "2026-10-13T07:59:44Z",
+      "end_time": "2026-10-13T07:59:46Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "21 - 40 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0003",
+      "year": 2026,
+      "page": 3,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0003.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 5.8,
+      "start_time": "2026-10-13T07:59:50Z",
+      "end_time": "2026-10-13T07:59:56Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "41 - 60 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0004",
+      "year": 2026,
+      "page": 4,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=4",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=4",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0004.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 4.01,
+      "start_time": "2026-10-13T07:59:59Z",
+      "end_time": "2026-10-13T08:00:03Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "61 - 80 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0005",
+      "year": 2026,
+      "page": 5,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=5",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=5",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0005.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 7.676,
+      "start_time": "2026-10-13T08:00:06Z",
+      "end_time": "2026-10-13T08:00:14Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "81 - 100 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0006",
+      "year": 2026,
+      "page": 6,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=6",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=6",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0006.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 4.21,
+      "start_time": "2026-10-13T08:00:18Z",
+      "end_time": "2026-10-13T08:00:22Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "101 - 120 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0007",
+      "year": 2026,
+      "page": 7,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=7",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=7",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0007.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 4.145,
+      "start_time": "2026-10-13T08:00:26Z",
+      "end_time": "2026-10-13T08:00:30Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "121 - 140 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0008",
+      "year": 2026,
+      "page": 8,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=8",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=8",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0008.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 6.688,
+      "start_time": "2026-10-13T08:00:34Z",
+      "end_time": "2026-10-13T08:00:40Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "141 - 160 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0009",
+      "year": 2026,
+      "page": 9,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=9",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=9",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0009.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 6.833,
+      "start_time": "2026-10-13T08:00:44Z",
+      "end_time": "2026-10-13T08:00:51Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "161 - 180 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    },
+    {
+      "page_id": "2026_0010",
+      "year": 2026,
+      "page": 10,
+      "url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=10",
+      "current_url": "https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=10",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_0010.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 5.692,
+      "start_time": "2026-10-13T08:00:54Z",
+      "end_time": "2026-10-13T08:01:00Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "181 - 200 of 76,106 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    }
+  ]
+}
