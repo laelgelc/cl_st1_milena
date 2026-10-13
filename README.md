@@ -167,29 +167,32 @@ If the study is extended to consider AI, works dated (`Date Updated`) before the
 
 ### List URL ranges (as of 12/10/2026)
 
+- Total list pages: 15056
+- Total expected works: 301055
+
 Year: 2026
 
-75,852 Works in Original Work
+76105 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2026-01-01&work_search[date_to]=2026-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 
-https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2026-01-01&work_search[date_to]=2026-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3793
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2026-01-01&work_search[date_to]=2026-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3806
 ```
 
 Year: 2025
 
-62,624 Works in Original Work
+62614 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 
-https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3132
+https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3131
 ```
 
 Year: 2024
 
-45,720 Works in Original Work
+45717 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2024-01-01&work_search[date_to]=2024-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
@@ -199,7 +202,7 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 Year: 2023
 
-37,817 Works in Original Work
+37815 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2023-01-01&work_search[date_to]=2023-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
@@ -209,7 +212,7 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 Year: 2022
 
-29,197 Works in Original Work
+29195 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2022-01-01&work_search[date_to]=2022-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
@@ -219,7 +222,7 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 Year: 2021
 
-22,574 Works in Original Work
+22574 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2021-01-01&work_search[date_to]=2021-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
@@ -229,7 +232,7 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 Year: 2020
 
-16,422 Works in Original Work
+16422 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2020-01-01&work_search[date_to]=2020-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
@@ -239,7 +242,7 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 Year: 2019
 
-10,613 Works in Original Work
+10613 Works in Original Work
 
 ```
 https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2019-01-01&work_search[date_to]=2019-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
