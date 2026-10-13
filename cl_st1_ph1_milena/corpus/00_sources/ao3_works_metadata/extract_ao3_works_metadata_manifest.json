@@ -1,0 +1,126 @@
+{
+  "run_metadata": {
+    "run_id": "20261013T211316Z",
+    "tool_name": "extract_ao3_works_metadata.py",
+    "tool_version": "v1",
+    "start_time": "2026-10-13T21:13:16Z",
+    "end_time": "2026-10-13T21:13:18Z",
+    "interrupted": false,
+    "input_manifest": "corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json",
+    "capture_run_id": "20261013T075915Z",
+    "output_dir": "corpus/00_sources/ao3_works_metadata",
+    "outputs": {
+      "ndjson": "corpus/00_sources/ao3_works_metadata/ao3_works_metadata.ndjson",
+      "tsv": "corpus/00_sources/ao3_works_metadata/ao3_works_metadata.tsv",
+      "xlsx": "corpus/00_sources/ao3_works_metadata/ao3_works_metadata.xlsx"
+    },
+    "log_file": "corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata.log",
+    "manifest_file": "corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata_manifest.json",
+    "config": {
+      "formats": [
+        "ndjson",
+        "tsv",
+        "xlsx"
+      ],
+      "overwrite": false,
+      "strict": false,
+      "start_page_id": null,
+      "end_page_id": null,
+      "limit_pages": null
+    },
+    "summary": {
+      "pages_in_input_manifest": 10,
+      "successful_pages_in_input_manifest": 10,
+      "pages_selected_for_extraction": 10,
+      "pages_parsed": 10,
+      "pages_failed": 0,
+      "works_extracted": 200,
+      "unique_work_ids": 200,
+      "duplicate_work_ids": 0,
+      "work_parse_warnings": 0
+    }
+  },
+  "pages": [
+    {
+      "page_id": "2026_0001",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0001.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0002",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0002.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0003",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0003.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0004",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0004.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0005",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0005.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0006",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0006.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0007",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0007.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0008",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0008.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0009",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0009.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "page_id": "2026_0010",
+      "source_html_path": "corpus/01_ao3_list_pages/2026/2026_0010.html",
+      "status": "success",
+      "works_extracted": 20,
+      "error": null,
+      "warnings": []
+    }
+  ],
+  "duplicates": []
+}

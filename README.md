@@ -254,5 +254,217 @@ https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_searc
 
 ### Lists Collection
 
+The first Phase 1 collection step captures AO3 list/search result pages for English works tagged as `Original Work`, excluding crossovers, grouped by yearly `Date Updated` ranges from 2026 down to 2019.
+
+This step is divided into two programmes:
+
+1. `capture_ao3_lists.py` — captures AO3 list pages as rendered HTML files.
+2. `extract_ao3_works_metadata.py` — extracts work-level metadata from the saved list-page HTML files.
+
+The list collection plan is defined in:
+```text
+cl_st1_ph1_milena/corpus/00_sources/ao3_list_collection_plan.json
+```
+The plan stores the AO3 query parameters, yearly date ranges, expected work counts, and page ranges. It is the source of truth for the list capture process.
+
+The collection order is descending by year:
+```text
+2026 → 2025 → 2024 → 2023 → 2022 → 2021 → 2020 → 2019
+```
+Within each year, pages are captured in ascending page order:
+```text
+2026_0001 → 2026_0002 → ...
+2025_0001 → 2025_0002 → ...
+...
+2019_0001 → ...
+```
+Recent years are captured first because they are more volatile: AO3 users are more active in recent-year results, so those list ranges are more susceptible to change during a long collection run.
+
+#### 1. Capture AO3 list pages
+
+The list capture programme is:
+```text
+cl_st1_ph1_milena/capture_ao3_lists.py
+```
+It reads:
+```text
+corpus/00_sources/ao3_list_collection_plan.json
+```
+and writes rendered HTML files to:
+```text
+corpus/01_ao3_list_pages/<year>/<year>_<page:04d>.html
+```
+For example:
+```text
+corpus/01_ao3_list_pages/2026/2026_0001.html
+corpus/01_ao3_list_pages/2026/2026_0002.html
+```
+The programme also writes:
+```text
+corpus/01_ao3_list_pages/capture_ao3_lists.log
+corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+```
+A timestamped manifest is also created for each run.
+
+The manifest records, for each attempted page:
+
+- page ID;
+- year;
+- AO3 page number;
+- generated AO3 URL;
+- saved HTML path;
+- capture status;
+- validation metadata;
+- detected work count;
+- timing and error information.
+
+The programme uses Selenium because AO3 can be unreliable with direct HTTP requests. It runs in a real browser, handles AO3’s Terms of Service prompt if it appears, waits for AO3 list content, and saves the rendered page HTML.
+
+Run commands from the Phase 1 directory:
+```text
+cl_st1_ph1_milena/
+```
+Default test run:
+```shell
+python capture_ao3_lists.py
+```
+Test run with 10 pages:
+```shell
+python capture_ao3_lists.py --test-limit 10
+```
+Full run:
+```shell
+python capture_ao3_lists.py --no-test-mode
+```
+Full run on EC2 with Chrome:
+```shell
+bash run_python_ec2.sh \
+    capture_ao3_lists.py \
+    --no-test-mode \
+    --browser chrome \
+    --request-delay 3 \
+    --request-jitter 1
+```
+Resume from a specific page ID:
+```shell
+python capture_ao3_lists.py \
+    --no-test-mode \
+    --start-page-id 2025_0120
+```
+The programme is safe to re-run. Existing HTML files are skipped by default unless `--reprocess` is used:
+```shell
+python capture_ao3_lists.py \
+    --no-test-mode \
+    --reprocess
+```
+#### 2. Extract work metadata from captured list pages
+
+After the list pages have been captured, extract work-level metadata with:
+```text
+cl_st1_ph1_milena/extract_ao3_works_metadata.py
+```
+This programme is offline: it does not contact AO3. It reads the capture manifest:
+```text
+corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+```
+selects only pages with:
+```text
+status == "success"
+```
+and parses each corresponding saved HTML file.
+
+Default extraction:
+```shell
+python extract_ao3_works_metadata.py
+```
+Small test extraction:
+```shell
+python extract_ao3_works_metadata.py \
+    --limit-pages 10 \
+    --overwrite
+```
+Extract from a specific timestamped capture manifest:
+```shell
+python extract_ao3_works_metadata.py \
+    --input-manifest corpus/01_ao3_list_pages/capture_ao3_lists_manifest_YYYYMMDDTHHMMSSZ.json \
+    --overwrite
+```
+The metadata extractor writes outputs to:
+```text
+corpus/00_sources/ao3_works_metadata/
+```
+The current standard outputs are:
+```text
+corpus/00_sources/ao3_works_metadata/ao3_works_metadata.ndjson
+corpus/00_sources/ao3_works_metadata/ao3_works_metadata.tsv
+corpus/00_sources/ao3_works_metadata/ao3_works_metadata.xlsx
+corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata.log
+corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata_manifest.json
+```
+A timestamped extraction manifest is also created for each run.
+
+The canonical machine-readable output is:
+```text
+ao3_works_metadata.ndjson
+```
+The TSV and XLSX files are convenience formats for inspection and analysis.
+
+The extracted work-level metadata includes:
+
+- work ID;
+- title;
+- work URL;
+- full-work URL with `view_adult=true&view_full_work=true`;
+- author name and author URL;
+- anonymous-work indicator;
+- gift recipient information when present;
+- fandoms and fandom URLs;
+- rating;
+- archive warnings;
+- categories;
+- completion status;
+- machine-readable `date_updated`;
+- original `date_updated_raw`;
+- `collection_year` from the source list stratum;
+- warning, relationship, character, and freeform tags;
+- tag URLs;
+- summary text and summary HTML;
+- series membership;
+- language and language code;
+- words;
+- chapter counts;
+- latest chapter URL when present;
+- collections, comments, kudos, bookmarks, and hits;
+- source page provenance.
+
+The `collection_year` field records the yearly list stratum used to capture the source page. It is distinct from `date_updated`, which is parsed from the work blurb itself. These fields should normally agree, but keeping both supports quality control.
+
+The extractor does not silently deduplicate works. If duplicate `work_id` values are encountered, all occurrences are retained, and duplicate counts are reported in the extraction manifest.
+
+#### List Collection outputs
+
+After both stages, the relevant outputs are:
+```text
+corpus/
+  00_sources/
+    ao3_list_collection_plan.json
+    ao3_works_metadata/
+      ao3_works_metadata.ndjson
+      ao3_works_metadata.tsv
+      ao3_works_metadata.xlsx
+      extract_ao3_works_metadata.log
+      extract_ao3_works_metadata_manifest.json
+  01_ao3_list_pages/
+    2026/
+      2026_0001.html
+      2026_0002.html
+      ...
+    2025/
+      2025_0001.html
+      ...
+    capture_ao3_lists.log
+    capture_ao3_lists_manifest.json
+```
+The saved list-page HTML files are the raw captured sources. The extracted metadata files are derived data products and can be regenerated from the HTML files and the capture manifest.
 
 ### Works Collection

@@ -1,0 +1,35 @@
+[2026-10-13 18:13:16] INFO  Starting extract_ao3_works_metadata.py run_id=20261013T211316Z
+[2026-10-13 18:13:16] INFO  Input manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-13 18:13:16] INFO  Output directory: corpus/00_sources/ao3_works_metadata
+[2026-10-13 18:13:16] INFO  Formats: ndjson, tsv, xlsx
+[2026-10-13 18:13:16] INFO  Overwrite: False; strict=False
+[2026-10-13 18:13:17] INFO  Pages in input manifest: 10
+[2026-10-13 18:13:17] INFO  Successful pages selected for extraction: 10
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0001: corpus/01_ao3_list_pages/2026/2026_0001.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0001 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0002: corpus/01_ao3_list_pages/2026/2026_0002.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0002 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0003: corpus/01_ao3_list_pages/2026/2026_0003.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0003 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0004: corpus/01_ao3_list_pages/2026/2026_0004.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0004 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0005: corpus/01_ao3_list_pages/2026/2026_0005.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0005 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0006: corpus/01_ao3_list_pages/2026/2026_0006.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0006 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0007: corpus/01_ao3_list_pages/2026/2026_0007.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0007 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0008: corpus/01_ao3_list_pages/2026/2026_0008.html
+[2026-10-13 18:13:17] INFO  SUCCESS 2026_0008 works_extracted=20 warnings=0
+[2026-10-13 18:13:17] INFO  Parsing page 2026_0009: corpus/01_ao3_list_pages/2026/2026_0009.html
+[2026-10-13 18:13:18] INFO  SUCCESS 2026_0009 works_extracted=20 warnings=0
+[2026-10-13 18:13:18] INFO  Parsing page 2026_0010: corpus/01_ao3_list_pages/2026/2026_0010.html
+[2026-10-13 18:13:18] INFO  SUCCESS 2026_0010 works_extracted=20 warnings=0
+[2026-10-13 18:13:18] INFO  Works extracted: 200
+[2026-10-13 18:13:18] INFO  Duplicate work IDs: 0
+[2026-10-13 18:13:18] INFO  Wrote NDJSON: corpus/00_sources/ao3_works_metadata/ao3_works_metadata.ndjson
+[2026-10-13 18:13:18] INFO  Wrote TSV: corpus/00_sources/ao3_works_metadata/ao3_works_metadata.tsv
+[2026-10-13 18:13:18] INFO  Wrote XLSX: corpus/00_sources/ao3_works_metadata/ao3_works_metadata.xlsx
+[2026-10-13 18:13:18] INFO  Wrote latest extraction manifest: corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata_manifest.json
+[2026-10-13 18:13:18] INFO  Wrote timestamped extraction manifest: corpus/00_sources/ao3_works_metadata/extract_ao3_works_metadata_manifest_20261013T211316Z.json
+[2026-10-13 18:13:18] INFO  Finished extraction: pages=10 failed_pages=0 works=200 warnings=0
