@@ -2,8 +2,8 @@
   "collection_name": "ao3_original_work_english_lists_2026_2019",
   "collection_phase": "Phase 1 - Data Collection",
   "collection_subphase": "Lists Collection",
-  "created_on": "2026-10-12",
-  "source_note": "AO3 list URL ranges documented as of 12/10/2026.",
+  "created_on": "2026-10-13",
+  "source_note": "AO3 list URL ranges documented as of 13/10/2026.",
   "base_url": "https://archiveofourown.org/works",
   "range_order": "descending_year",
   "page_order_within_year": "ascending_page",
@@ -43,23 +43,23 @@
       "year": 2026,
       "date_from": "2026-01-01",
       "date_to": "2026-12-31",
-      "expected_works": 75852,
+      "expected_works": 76105,
       "page_from": 1,
-      "page_to": 3793
+      "page_to": 3806
     },
     {
       "year": 2025,
       "date_from": "2025-01-01",
       "date_to": "2025-12-31",
-      "expected_works": 62624,
+      "expected_works": 62614,
       "page_from": 1,
-      "page_to": 3132
+      "page_to": 3131
     },
     {
       "year": 2024,
       "date_from": "2024-01-01",
       "date_to": "2024-12-31",
-      "expected_works": 45720,
+      "expected_works": 45717,
       "page_from": 1,
       "page_to": 2286
     },
@@ -67,7 +67,7 @@
       "year": 2023,
       "date_from": "2023-01-01",
       "date_to": "2023-12-31",
-      "expected_works": 37817,
+      "expected_works": 37815,
       "page_from": 1,
       "page_to": 1891
     },
@@ -75,7 +75,7 @@
       "year": 2022,
       "date_from": "2022-01-01",
       "date_to": "2022-12-31",
-      "expected_works": 29197,
+      "expected_works": 29195,
       "page_from": 1,
       "page_to": 1460
     },
