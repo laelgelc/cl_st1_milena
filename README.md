@@ -468,3 +468,168 @@ corpus/
 The saved list-page HTML files are the raw captured sources. The extracted metadata files are derived data products and can be regenerated from the HTML files and the capture manifest.
 
 ### Works Collection
+
+The second Phase 1 collection step captures the full AO3 work pages selected for the corpus.
+
+This step is divided into two stages:
+
+1. `capture_ao3_works.py` — captures selected AO3 full-work pages as rendered HTML files.
+2. `extract_ao3_works_text.py` — extracts corpus text from the saved work-page HTML files. This stage is planned separately.
+
+The work collection plan is defined in:
+```text
+cl_st1_ph1_milena/corpus/00_sources/ao3_work_collection_plan/ao3_work_collection_plan.ndjson
+```
+The collection plan is generated from the AO3 works metadata selected in:
+```text
+cl_st1_ph1_milena/cl_st1_ph1_milena.ipynb
+```
+The AO3 works metadata remains the single source of information for deciding which works should be collected. The work capture programme does not select the sample; it only executes the supplied plan.
+
+The collection plan is stored in three formats:
+```text
+corpus/00_sources/ao3_work_collection_plan/ao3_work_collection_plan.ndjson
+corpus/00_sources/ao3_work_collection_plan/ao3_work_collection_plan.tsv
+corpus/00_sources/ao3_work_collection_plan/ao3_work_collection_plan.xlsx
+```
+ The canonical machine-readable input for the capture programme is:
+```text
+ao3_work_collection_plan.ndjson
+```
+ The TSV and XLSX files are convenience formats for inspection.
+
+Each NDJSON record represents one work to capture. The required fields are:
+
+- `work_id`;
+- `full_work_url`;
+- `date_updated`.
+
+The `full_work_url` field should already include:
+```text
+view_adult=true&view_full_work=true
+```
+This ensures that AO3 adult-content interstitial pages are bypassed where applicable and that multi-chapter works are requested as full-work pages.
+
+#### 1. Capture AO3 work pages
+
+The work-page capture programme is:
+```text
+cl_st1_ph1_milena/capture_ao3_works.py
+```
+It reads:
+```text
+corpus/00_sources/ao3_work_collection_plan/ao3_work_collection_plan.ndjson
+```
+and writes rendered HTML files to:
+```text
+corpus/02_ao3_work_pages/<year>/<work_id>.html
+```
+The `<year>` directory is derived from the `date_updated` field.
+
+For example, a plan record with:
+```json
+{
+   "work_id": "85198816",
+   "full_work_url": "https://archiveofourown.org/works/85198816?view_adult=true&view_full_work=true",
+   "date_updated": "2026-10-13"
+}
+```
+is captured as:
+```text
+corpus/02_ao3_work_pages/2026/85198816.html
+```
+The programme also writes:
+```text
+corpus/02_ao3_work_pages/capture_ao3_works.log
+corpus/02_ao3_work_pages/capture_ao3_works_manifest.json
+```
+A timestamped manifest is also created for each run.
+
+The manifest records, for each attempted work:
+
+- work ID;
+- year derived from `date_updated`;
+- source `full_work_url`;
+- saved HTML path;
+- capture status;
+- validation metadata;
+- detected work title, byline, work skin, chapter container, and chapter count when available;
+- timing and error information;
+- selected provenance fields from the collection plan.
+
+The programme uses Selenium because AO3 can be unreliable with direct HTTP requests. It runs in a real browser, handles AO3’s Terms of Service prompt if it appears, waits for AO3 work-page content, and saves the rendered page HTML.
+
+Run commands from the Phase 1 directory:
+```text
+cl_st1_ph1_milena/
+```
+Default test run:
+```shell
+python capture_ao3_works.py
+ ```
+ Test run with 10 works:
+```shell
+python capture_ao3_works.py --test-limit 10
+```
+Full run:
+```shell
+python capture_ao3_works.py --no-test-mode
+```
+Full run on EC2 with Chrome:
+```shell
+bash run_python_ec2.sh \
+    capture_ao3_works.py \
+    --no-test-mode \
+    --browser chrome \
+    --request-delay 3 \
+    --request-jitter 1
+```
+Resume from a specific work ID:
+```shell
+python capture_ao3_works.py \
+    --no-test-mode \
+    --start-work-id 85198816
+```
+The programme is safe to re-run. Existing HTML files are skipped by default unless `--reprocess` is used:
+```shell
+python capture_ao3_works.py \
+    --no-test-mode \
+    --reprocess
+ ```
+The programme fails fast if duplicate `work_id` values are present in the collection plan, because each work ID maps to one output HTML path.
+
+#### 2. Extract AO3 works text
+
+The text extraction stage is planned as a separate offline programme.
+
+This future programme should read the saved work-page HTML files from:
+```text
+corpus/02_ao3_work_pages/
+```
+and extract the corpus-ready text from the captured AO3 work content.
+
+It should not contact AO3. The saved HTML files are the raw captured sources for this stage.
+
+#### Works Collection outputs
+
+After the work-page capture stage, the relevant outputs are:
+```text
+corpus/
+  00_sources/
+    ao3_work_collection_plan/
+      ao3_work_collection_plan.ndjson
+      ao3_work_collection_plan.tsv
+      ao3_work_collection_plan.xlsx
+  02_ao3_work_pages/
+    2026/
+      85198816.html
+      88099596.html
+      ...
+    2025/
+      76796521.html
+      ...
+    capture_ao3_works.log
+    capture_ao3_works_manifest.json
+    capture_ao3_works_manifest_YYYYMMDDTHHMMSSZ.json
+```
+The saved work-page HTML files are the raw captured sources. The extracted corpus text will be a derived data product and should be regenerable from the HTML files and the capture manifest.
