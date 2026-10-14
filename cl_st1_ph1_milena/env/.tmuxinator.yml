@@ -18,4 +18,4 @@ windows:
             - git switch -c feature/ec2_job_1
             - git push -u origin feature/ec2_job_1
         - pane_2:
-            - clear
+            - aws s3 ls
