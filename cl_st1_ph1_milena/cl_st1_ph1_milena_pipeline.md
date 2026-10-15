@@ -39,6 +39,16 @@ python capture_ao3_lists.py \
     --request-jitter 1
 ```
 
+```shell
+python capture_ao3_lists.py \
+    --no-test-mode \
+    --request-delay 6 \
+    --request-jitter 4 \
+    --max-retries 4 \
+    --retry-delay 20 \
+    --timeout 45
+```
+
 ### 1.2. Extract Metadata
 
 #### Default extraction
