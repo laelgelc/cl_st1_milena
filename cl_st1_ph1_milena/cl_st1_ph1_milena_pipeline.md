@@ -29,6 +29,17 @@ bash run_python_ec2.sh \
     --request-jitter 1
 ```
 
+```shell
+bash run_python_ec2.sh \
+    capture_ao3_lists.py \
+    --no-test-mode \
+    --request-delay 6 \
+    --request-jitter 4 \
+    --max-retries 4 \
+    --retry-delay 20 \
+    --timeout 45
+```
+
 Without automatic EC2 instance stop
 
 ```shell
@@ -48,6 +59,8 @@ python capture_ao3_lists.py \
     --retry-delay 20 \
     --timeout 45
 ```
+
+
 
 ### 1.2. Extract Metadata
 
