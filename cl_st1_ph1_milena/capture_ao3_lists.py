@@ -57,6 +57,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from urllib3.exceptions import ReadTimeoutError
 
 
 TOOL_NAME = "capture_ao3_lists.py"
@@ -438,6 +439,7 @@ def build_ao3_list_url(base_url: str, filters: dict[str, Any], range_item: dict[
         A URL string with URL-encoded query parameters.
     """
     query_params = {
+        "view_adult": "true",
         "work_search[sort_column]": filters.get("sort_column", ""),
         "work_search[other_tag_names]": filters.get("other_tag_names", ""),
         "work_search[excluded_tag_names]": filters.get("excluded_tag_names", ""),
@@ -599,13 +601,14 @@ def plan_captures(
     return planned, skipped_existing, total_pages
 
 
-def create_driver(browser: str, headless: bool, chrome_server_flags: bool) -> WebDriver:
+def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeout: int) -> WebDriver:
     """Create a Selenium WebDriver for the requested browser.
 
     Args:
         browser: Browser name, either "chrome" or "firefox".
         headless: Whether to run in headless mode.
         chrome_server_flags: Whether to use Chrome options suitable for EC2.
+        timeout: Base timeout in seconds from command-line configuration.
 
     Returns:
         A Selenium WebDriver instance.
@@ -627,7 +630,10 @@ def create_driver(browser: str, headless: bool, chrome_server_flags: bool) -> We
                 options.add_argument("--no-sandbox")
                 options.add_argument("--disable-dev-shm-usage")
 
-            return webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(options=options)
+            driver.set_page_load_timeout(timeout * 4)
+            driver.set_script_timeout(timeout)
+            return driver
 
         if browser == "firefox":
             options = FirefoxOptions()
@@ -635,7 +641,10 @@ def create_driver(browser: str, headless: bool, chrome_server_flags: bool) -> We
             if headless:
                 options.add_argument("--headless")
 
-            return webdriver.Firefox(options=options)
+            driver = webdriver.Firefox(options=options)
+            driver.set_page_load_timeout(timeout * 4)
+            driver.set_script_timeout(timeout)
+            return driver
 
     except WebDriverException as exc:
         raise ConfigurationError(f"Could not initialise Selenium {browser} driver: {exc}") from exc
@@ -766,7 +775,20 @@ def summarise_error(error: BaseException | str | None, max_length: int = 500) ->
 
     text = str(error)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    summary = lines[-1] if lines else text.strip()
+    useful_lines = [
+        line for line in lines
+        if not line.startswith("#") and "<unknown>" not in line
+    ]
+
+    if useful_lines:
+        summary = useful_lines[0]
+    elif lines:
+        summary = lines[0]
+    else:
+        summary = type(error).__name__
+
+    if not summary or summary == "Message:":
+        summary = type(error).__name__
 
     if len(summary) > max_length:
         summary = summary[: max_length - 3] + "..."
@@ -906,15 +928,15 @@ def capture_one_page(
             last_status = "failed_validation"
             try:
                 last_current_url = driver.current_url
-            except WebDriverException:
+            except (WebDriverException, ReadTimeoutError):
                 last_current_url = None
 
-        except (WebDriverException, OSError, JavascriptException) as exc:
+        except (WebDriverException, ReadTimeoutError, OSError, JavascriptException) as exc:
             last_error = exc
             last_status = "failed"
             try:
                 last_current_url = driver.current_url
-            except WebDriverException:
+            except (WebDriverException, ReadTimeoutError):
                 last_current_url = None
 
         if attempt_number < attempts_allowed:
@@ -1180,6 +1202,7 @@ def main() -> int:
                 browser=args.browser,
                 headless=args.headless,
                 chrome_server_flags=args.chrome_server_flags,
+                timeout=args.timeout,
             )
 
         for item in planned:
