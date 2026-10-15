@@ -18,9 +18,21 @@ python capture_ao3_lists.py --test-limit 10
 
 #### EC2 full run with `tmux`
 
+With automatic EC2 instance stop
+
 ```shell
 bash run_python_ec2.sh \
     capture_ao3_lists.py \
+    --no-test-mode \
+    --browser chrome \
+    --request-delay 3 \
+    --request-jitter 1
+```
+
+Without automatic EC2 instance stop
+
+```shell
+python capture_ao3_lists.py \
     --no-test-mode \
     --browser chrome \
     --request-delay 3 \
