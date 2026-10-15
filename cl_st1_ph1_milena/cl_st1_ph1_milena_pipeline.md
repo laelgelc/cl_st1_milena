@@ -30,6 +30,16 @@ bash run_python_ec2.sh \
 ```
 
 ```shell
+nohup bash run_python_ec2.sh \
+    capture_ao3_lists.py \
+    --no-test-mode \
+    --browser chrome \
+    --request-delay 3 \
+    --request-jitter 1 \
+> process_output.log 2>&1 &
+```
+
+```shell
 bash run_python_ec2.sh \
     capture_ao3_lists.py \
     --no-test-mode \
@@ -38,6 +48,18 @@ bash run_python_ec2.sh \
     --max-retries 4 \
     --retry-delay 20 \
     --timeout 45
+```
+
+```shell
+nohup bash run_python_ec2.sh \
+    capture_ao3_lists.py \
+    --no-test-mode \
+    --request-delay 6 \
+    --request-jitter 4 \
+    --max-retries 4 \
+    --retry-delay 20 \
+    --timeout 45 \
+> process_output.log 2>&1 &
 ```
 
 Without automatic EC2 instance stop
@@ -59,8 +81,6 @@ python capture_ao3_lists.py \
     --retry-delay 20 \
     --timeout 45
 ```
-
-
 
 ### 1.2. Extract Metadata
 
