@@ -9,9 +9,11 @@
 This programme implements the **Lists Collection** subphase of Phase 1. It does **not** extract metadata and does **not** extract text. Its sole data-collection responsibility is to capture and save AO3 list pages as HTML files in a reproducible, resumable, auditable way.
 
 The programme reads a fixed JSON collection plan:
+
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
+
 The collection plan defines:
 
 - the AO3 base URL;
@@ -22,31 +24,41 @@ The collection plan defines:
 - the planned capture order.
 
 For Phase 1, the planned capture range is:
+
 ```text
 2026 → 2025 → 2024 → 2023 → 2022 → 2021 → 2020 → 2019
 ```
+
 Years are captured in **descending order** because the most recent AO3 lists are more volatile. AO3 users are more active in recent years, so list ranges for 2026 and 2025 are more susceptible to change. Capturing recent years first reduces the risk that the documented page ranges become stale before acquisition.
 
 Within each year, pages are captured in ascending page order:
+
 ```text
 2026_0001 → 2026_0002 → ... → 2026_3793
 2025_0001 → 2025_0002 → ... → 2025_3132
 ...
 2019_0001 → ... → 2019_0531
 ```
+
 The programme saves each list page as:
+
 ```text
 corpus/01_ao3_list_pages/<year>/<year>_<page:04d>.html
 ```
+
 For example:
+
 ```text
 corpus/01_ao3_list_pages/2026/2026_0001.html
 corpus/01_ao3_list_pages/2025/2025_0001.html
 corpus/01_ao3_list_pages/2019/2019_0531.html
 ```
+
 The programme uses Selenium to run a real browser in headless mode. Chrome is the default browser, and Firefox is supported through a command-line option.
 
 The programme must handle AO3’s Terms of Service consent prompt when it appears, wait for list-page content to be available, validate that the expected AO3 list structure is present, and then save the rendered HTML.
+
+The programme must include `view_adult=true` in generated AO3 list URLs. AO3 may ignore the parameter where it is not relevant, but including it makes the generated list URLs consistent with the wider collection strategy for reducing adult-content interstitial behaviour.
 
 The programme must be safe to re-run: existing HTML files are skipped by default unless `--reprocess` is provided.
 
@@ -63,14 +75,16 @@ The programme must implement the following behaviours:
 - For Phase 1, process years in descending order from 2026 to 2019.
 - Process pages in ascending order within each year.
 - Generate canonical AO3 list URLs from:
-  - base URL;
-  - shared query parameters;
-  - year-specific date range;
-  - page number.
+    - base URL;
+    - shared query parameters;
+    - year-specific date range;
+    - page number;
+    - `view_adult=true`.
 - Capture rendered AO3 list pages with Selenium.
 - Use Chrome by default.
 - Support Firefox as an alternative browser.
 - Run headless by default.
+- Configure Selenium page-load and script timeouts from the command-line timeout setting.
 - Use one browser session per run for efficiency and to preserve AO3 consent state.
 - Handle the AO3 Terms of Service consent prompt if it appears.
 - Wait for AO3 list content using page-specific readiness checks.
@@ -78,21 +92,26 @@ The programme must implement the following behaviours:
 - Do not produce scraped `.txt` files.
 - Do not extract full metadata in this programme.
 - Record basic validation information such as:
-  - page title;
-  - page heading;
-  - number of detected work blurbs.
+    - page title;
+    - page heading;
+    - number of detected work blurbs;
+    - whether the AO3 Terms of Service prompt was handled.
 - Skip existing HTML files by default.
 - Reprocess existing HTML files only when `--reprocess` is provided.
 - Use test mode by default, limiting capture to 5 planned pages.
 - Support starting from a specific page identifier using `--start-page-id`.
 - Continue processing remaining pages if one page fails.
+- Treat ordinary Selenium, browser, local WebDriver communication, page-load timeout, validation, and file-write failures as page-level failures rather than full-run crashes.
+- Retry failed page captures according to the configured retry policy.
 - Apply a configurable delay between page captures.
 - Optionally apply random jitter to the inter-page delay.
 - Record progress and errors in an append-only log file.
+- Produce compact and meaningful error summaries for logs and manifests.
+- Avoid reducing Selenium errors to unhelpful stack-frame fragments such as `#17 ... <unknown>`.
 - Produce a JSON manifest with run-level metadata and page-level results.
 - Write both:
-  - a timestamped per-run manifest;
-  - a latest manifest that is overwritten on each run.
+    - a timestamped per-run manifest;
+    - a latest manifest that is overwritten on each run.
 - Exit with status code `0` only when all attempted captures succeed or are skipped.
 - Exit with a non-zero status code if one or more attempted captures fail, or if there is a configuration/validation error.
 
@@ -105,9 +124,11 @@ The programme must implement the following behaviours:
 #### Collection plan file
 
 Default path:
+
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
+
 The collection plan is a JSON file defining the Phase 1 AO3 list capture task.
 
 The file is expected to contain:
@@ -120,6 +141,7 @@ The file is expected to contain:
 - expected works count for each year.
 
 #### Recommended collection plan structure
+
 ```json
 {
   "collection_name": "ao3_original_work_english_lists_2026_2019",
@@ -209,6 +231,7 @@ The file is expected to contain:
   ]
 }
 ```
+
 #### Query parameter mapping
 
 The programme must translate the plan’s `filters` object into AO3 query parameters.
@@ -217,6 +240,7 @@ For the filters above, the generated URL must include:
 
 | Plan field           | AO3 query parameter               |
 |----------------------|-----------------------------------|
+| fixed value          | `view_adult=true`                 |
 | `sort_column`        | `work_search[sort_column]`        |
 | `other_tag_names`    | `work_search[other_tag_names]`    |
 | `excluded_tag_names` | `work_search[excluded_tag_names]` |
@@ -233,9 +257,11 @@ For the filters above, the generated URL must include:
 | page number          | `page`                            |
 
 Example generated URL:
+
 ```text
-https://archiveofourown.org/works?work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2025-01-01&work_search%5Bdate_to%5D=2025-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2025-01-01&work_search%5Bdate_to%5D=2025-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 ```
+
 The exact encoding may differ as long as the resulting URL is semantically equivalent and valid.
 
 ---
@@ -245,14 +271,17 @@ The exact encoding may differ as long as the resulting URL is semantically equiv
 #### HTML output directory
 
 Default path:
+
 ```text
 corpus/01_ao3_list_pages/
 ```
+
 The programme must create this directory if it does not already exist.
 
 #### Per-year output directories
 
 The programme must save pages under year-specific subdirectories:
+
 ```text
 corpus/01_ao3_list_pages/2026/
 corpus/01_ao3_list_pages/2025/
@@ -263,18 +292,23 @@ corpus/01_ao3_list_pages/2021/
 corpus/01_ao3_list_pages/2020/
 corpus/01_ao3_list_pages/2019/
 ```
+
 #### Per-page HTML output
 
 Each page must be saved as:
+
 ```text
 <output_dir>/<year>/<year>_<page:04d>.html
 ```
+
 Examples:
+
 ```text
 corpus/01_ao3_list_pages/2026/2026_0001.html
 corpus/01_ao3_list_pages/2026/2026_3793.html
 corpus/01_ao3_list_pages/2019/2019_0531.html
 ```
+
 #### No text output
 
 The programme must **not** save `.txt` versions of the pages.
@@ -284,9 +318,11 @@ Text extraction is outside the scope of `capture_ao3_lists.py`.
 #### Log file
 
 Default path:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
+
 The log file must be:
 
 - plain text;
@@ -301,9 +337,11 @@ The programme must write two manifest files.
 ##### Latest manifest
 
 Default path:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
+
 This file is overwritten at the end of each run.
 
 ##### Per-run manifest
@@ -311,21 +349,27 @@ This file is overwritten at the end of each run.
 A timestamped copy must also be written using the run ID.
 
 Filename pattern:
+
 ```text
 capture_ao3_lists_manifest_<run_id>.json
 ```
+
 Example:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261012T143012Z.json
 ```
+
 ---
 
 ## 4. Command-line Interface
 
 ### 4.1 Default usage
+
 ```bash
 python capture_ao3_lists.py
 ```
+
 Default behaviour:
 
 - collection plan: `corpus/00_sources/ao3_list_collection_plan.json`
@@ -334,13 +378,18 @@ Default behaviour:
 - manifest file: `corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json`
 - browser: `chrome`
 - headless mode: enabled
+- Chrome server flags: enabled
 - test mode: enabled
 - test limit: 5 pages
 - reprocess: disabled
 - existing `.html` files are skipped
 - workers: 1 / sequential processing
+- timeout: 30 seconds for AO3 readiness checks
+- Selenium page-load timeout: derived from `--timeout`
+- Selenium script timeout: derived from `--timeout`
 - request delay: enabled
 - AO3 Terms of Service prompt handling: enabled
+- generated list URLs include `view_adult=true`
 - no start page filter
 
 ---
@@ -356,13 +405,17 @@ However, all important paths and processing controls must be configurable.
 ### 4.3 Optional arguments
 
 #### Collection plan path
+
 ```bash
 --collection-plan PATH
 ```
+
 Default:
+
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
+
 Description:
 
 Path to the JSON collection plan file.
@@ -370,13 +423,17 @@ Path to the JSON collection plan file.
 ---
 
 #### Output directory
+
 ```bash
 --output-dir PATH
 ```
+
 Default:
+
 ```text
 corpus/01_ao3_list_pages/
 ```
+
 Description:
 
 Directory where captured AO3 list HTML files will be saved.
@@ -384,14 +441,18 @@ Directory where captured AO3 list HTML files will be saved.
 ---
 
 #### Browser
+
 ```bash
 --browser chrome
 --browser firefox
 ```
+
 Default:
+
 ```text
 chrome
 ```
+
 Description:
 
 Browser to use for Selenium capture.
@@ -404,29 +465,63 @@ Supported values:
 ---
 
 #### Headless mode
+
 ```bash
 --headless
 --no-headless
 ```
+
 Default:
+
 ```text
 --headless
 ```
+
 Description:
 
 Run the browser in headless mode by default. This is required for production use on EC2.
 
 ---
 
+#### Chrome server flags
+
+```bash
+--chrome-server-flags
+--no-chrome-server-flags
+```
+
+Default:
+
+```text
+--chrome-server-flags
+```
+
+Description:
+
+When using Chrome, include options suitable for headless Linux/EC2 execution, such as:
+
+```text
+--no-sandbox
+--disable-dev-shm-usage
+--disable-gpu
+--window-size=1920,1080
+```
+
+---
+
 #### Test mode
+
 ```bash
 --test-mode
 --no-test-mode
 ```
+
 Default:
+
 ```text
 --test-mode
 ```
+
 Description:
 
 When test mode is enabled, the programme processes only a limited number of planned pages.
@@ -434,13 +529,17 @@ When test mode is enabled, the programme processes only a limited number of plan
 ---
 
 #### Test limit
+
 ```bash
 --test-limit N
 ```
+
 Default:
+
 ```text
 5
 ```
+
 Description:
 
 Maximum number of pages to attempt when test mode is enabled.
@@ -448,19 +547,25 @@ Maximum number of pages to attempt when test mode is enabled.
 Must be a positive integer.
 
 Example:
+
 ```bash
 python capture_ao3_lists.py --test-limit 10
 ```
+
 ---
 
 #### Reprocess existing pages
+
 ```bash
 --reprocess
 ```
+
 Default:
+
 ```text
 False
 ```
+
 Description:
 
 When omitted, the programme skips any page whose output `.html` file already exists.
@@ -468,53 +573,69 @@ When omitted, the programme skips any page whose output `.html` file already exi
 When provided, the programme captures the page again and overwrites the existing output file.
 
 Example:
+
 ```bash
 python capture_ao3_lists.py --reprocess
 ```
+
 ---
 
 #### Start page ID
+
 ```bash
 --start-page-id PAGE_ID
 ```
+
 Default:
+
 ```text
 None
 ```
+
 Description:
 
 Optional page identifier from which to start planning captures.
 
 The page ID format is:
+
 ```text
 <year>_<page:04d>
 ```
+
 Examples:
+
 ```text
 2026_0001
 2025_0120
 2019_0531
 ```
+
 When `--start-page-id` is provided, the programme must preserve the collection plan order but ignore all pages that occur before the specified page ID. The specified page itself must be included in the planning step.
 
 Example:
+
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
+
 If the requested page ID is not found in the planned page list, the programme must fail fast with a configuration error.
 
 ---
 
 #### Log file
+
 ```bash
 --log-file PATH
 ```
+
 Default:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
+
 Description:
 
 Path to the append-only log file.
@@ -522,13 +643,17 @@ Path to the append-only log file.
 ---
 
 #### Manifest file
+
 ```bash
 --manifest-file PATH
 ```
+
 Default:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
+
 Description:
 
 Path to the latest manifest file. The per-run timestamped manifest should be written next to this file.
@@ -536,13 +661,17 @@ Path to the latest manifest file. The per-run timestamped manifest should be wri
 ---
 
 #### Workers
+
 ```bash
 --workers N
 ```
+
 Default:
+
 ```text
 1
 ```
+
 Description:
 
 Number of worker processes.
@@ -554,33 +683,48 @@ Must be a positive integer.
 ---
 
 #### Timeout
+
 ```bash
 --timeout SECONDS
 ```
+
 Default suggestion:
+
 ```text
 30
 ```
+
 Description:
 
-Maximum allowed time to wait for one AO3 page to load and pass readiness checks.
+Maximum allowed time, in seconds, for AO3 page readiness checks and related browser interactions.
 
-If the timeout is reached:
+The value is also used to configure Selenium browser timeouts:
 
-- mark the item as failed;
-- log the timeout;
+- the page-load timeout should be derived from `--timeout`, for example `timeout * 4`;
+- the script timeout should be set to `--timeout`.
+
+If a page load, WebDriver command, or readiness check times out:
+
+- treat the failure as a retryable per-page failure;
+- retry according to `--max-retries`;
+- if all attempts fail, mark the item as failed;
+- log a compact error summary;
 - continue with the next page.
 
 ---
 
 #### Maximum retries
+
 ```bash
 --max-retries N
 ```
+
 Default suggestion:
+
 ```text
 2
 ```
+
 Description:
 
 Number of retry attempts after a failed capture.
@@ -596,13 +740,17 @@ Must be zero or a positive integer.
 ---
 
 #### Retry delay
+
 ```bash
 --retry-delay SECONDS
 ```
+
 Default suggestion:
+
 ```text
 10
 ```
+
 Description:
 
 Delay between failed capture attempts.
@@ -612,13 +760,17 @@ Must be zero or a positive integer.
 ---
 
 #### Request delay
+
 ```bash
 --request-delay SECONDS
 ```
+
 Default suggestion:
+
 ```text
 3
 ```
+
 Description:
 
 Delay after each attempted page capture before the next page is requested.
@@ -628,109 +780,112 @@ This is a politeness control to avoid placing unnecessary load on AO3.
 ---
 
 #### Request jitter
+
 ```bash
 --request-jitter SECONDS
 ```
+
 Default suggestion:
+
 ```text
 1
 ```
+
 Description:
 
 Maximum random additional delay added to `--request-delay`.
 
 For example, with:
+
 ```bash
 --request-delay 3 --request-jitter 1
 ```
+
 the programme waits between 3 and 4 seconds between page requests.
 
----
-
-#### Chrome server flags
-```bash
---chrome-server-flags
---no-chrome-server-flags
-```
-Default:
-```text
---chrome-server-flags
-```
-Description:
-
-When using Chrome, include options suitable for headless Linux/EC2 execution, such as:
-```text
---no-sandbox
---disable-dev-shm-usage
---disable-gpu
---window-size=1920,1080
-```
 ---
 
 ## 4.4 Example commands
 
 ### Small default test run
+
 ```bash
 python capture_ao3_lists.py
 ```
+
 Captures up to 5 missing pages using the default collection plan.
 
 ---
 
 ### Test run with 10 pages
+
 ```bash
 python capture_ao3_lists.py --test-limit 10
 ```
+
 ---
 
 ### Test run from a specific page ID
+
 ```bash
 python capture_ao3_lists.py \
   --test-limit 10 \
   --start-page-id 2025_0120
 ```
+
 ---
 
 ### Full production run
+
 ```bash
 python capture_ao3_lists.py --no-test-mode
 ```
+
 ---
 
 ### Full production run from a specific page ID
+
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
+
 ---
 
 ### Full production run with explicit paths
+
 ```bash
 python capture_ao3_lists.py \
   --collection-plan corpus/00_sources/ao3_list_collection_plan.json \
   --output-dir corpus/01_ao3_list_pages \
   --no-test-mode
 ```
+
 ---
 
 ### Full production run with Firefox
+
 ```bash
 python capture_ao3_lists.py \
   --browser firefox \
   --no-test-mode
 ```
+
 ---
 
 ### Re-capture pages even if files already exist
+
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --reprocess
 ```
+
 ---
 
 ### More conservative production run
+
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
@@ -739,9 +894,30 @@ python capture_ao3_lists.py \
   --max-retries 3 \
   --retry-delay 20
 ```
+
+---
+
+### Resume after transient AO3 or WebDriver instability
+
+If a long production run encounters repeated transient page-load or local WebDriver timeouts, resume from the first missing or failed page with slower request pacing and more retries:
+
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2025_3050 \
+  --request-delay 6 \
+  --request-jitter 4 \
+  --max-retries 4 \
+  --retry-delay 20 \
+  --timeout 45
+```
+
+Existing successfully captured pages will still be skipped unless `--reprocess` is provided.
+
 ---
 
 ### EC2 full run with `nohup`
+
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
@@ -751,9 +927,11 @@ nohup bash run_python_ec2.sh \
     --request-jitter 1 \
 > process_output.log 2>&1 &
 ```
+
 ---
 
 ### EC2 full run from a specific page ID
+
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
@@ -764,6 +942,7 @@ nohup bash run_python_ec2.sh \
     --request-jitter 1 \
 > process_output.log 2>&1 &
 ```
+
 ---
 
 ## 5. Argument Validation
@@ -775,13 +954,14 @@ The programme must fail fast with a clear message if:
 - the collection plan contains invalid JSON;
 - the collection plan is missing required top-level fields;
 - the collection plan has an empty `ranges` list;
+- the collection plan filters object is missing required fields;
 - a range is missing required fields:
-  - `year`;
-  - `date_from`;
-  - `date_to`;
-  - `page_from`;
-  - `page_to`;
-  - `expected_works`;
+    - `year`;
+    - `date_from`;
+    - `date_to`;
+    - `page_from`;
+    - `page_to`;
+    - `expected_works`;
 - a range has invalid page values;
 - a range has `page_from` greater than `page_to`;
 - an output directory cannot be created;
@@ -810,13 +990,18 @@ A validation error should:
 
 ### Required Python packages
 
-The programme requires Python and Selenium.
+The programme requires Python, Selenium, and urllib3.
 
 Suggested Python dependencies:
+
 ```text
 selenium
+urllib3
 ```
-The programme may use only Python standard-library modules besides Selenium.
+
+`urllib3` is used so that local Selenium/WebDriver read timeouts can be caught explicitly and treated as retryable page-level failures.
+
+The programme otherwise uses Python standard-library modules where possible.
 
 Suggested standard-library modules:
 
@@ -849,6 +1034,7 @@ Selenium Manager may be used automatically by Selenium to locate, download, and 
 The programme must be portable to an EC2 instance.
 
 For Chrome on EC2, the following browser options should be used by default in headless mode:
+
 ```text
 --headless=new
 --no-sandbox
@@ -856,10 +1042,13 @@ For Chrome on EC2, the following browser options should be used by default in he
 --disable-gpu
 --window-size=1920,1080
 ```
+
 For Firefox on EC2, the browser should run with:
+
 ```text
 --headless
 ```
+
 ### Secrets and credentials
 
 This programme does not require API keys or secret credentials.
@@ -875,75 +1064,79 @@ For this first implementation, AO3 cookies are not required. AO3 Terms of Servic
 The programme must follow this workflow:
 
 1. **Startup**
-   - Parse command-line arguments.
-   - Generate a UTC run ID.
-   - Set up logging.
-   - Validate arguments.
-   - Load and validate the collection plan.
-   - Ensure output, log, and manifest directories exist.
+    - Parse command-line arguments.
+    - Generate a UTC run ID.
+    - Set up logging.
+    - Validate arguments.
+    - Load and validate the collection plan.
+    - Ensure output, log, and manifest directories exist.
 
 2. **Planning**
-   - Build the ordered list of planned pages from the collection plan.
-   - Preserve the yearly order from `ranges`.
-   - For the Phase 1 plan, this means 2026 through 2019.
-   - For each year, create page IDs in ascending page order.
-   - Generate canonical AO3 URLs for each page.
-   - If `--start-page-id` is provided:
-     - locate the specified page ID;
-     - ignore all pages before it;
-     - include the specified page and all following pages;
-     - fail fast if the specified page ID is not found.
-   - For each selected page:
-     - compute output path;
-     - decide whether to skip or attempt capture.
-   - If the file exists and `--reprocess` is not enabled:
-     - mark the page as `skipped_existing`.
-   - If the file does not exist or `--reprocess` is enabled:
-     - plan the page for capture.
-   - If test mode is enabled:
-     - limit attempted captures to `--test-limit`.
+    - Build the ordered list of planned pages from the collection plan.
+    - Preserve the yearly order from `ranges`.
+    - For the Phase 1 plan, this means 2026 through 2019.
+    - For each year, create page IDs in ascending page order.
+    - Generate canonical AO3 URLs for each page.
+    - Include `view_adult=true` in every generated AO3 list URL.
+    - If `--start-page-id` is provided:
+        - locate the specified page ID;
+        - ignore all pages before it;
+        - include the specified page and all following pages;
+        - fail fast if the specified page ID is not found.
+    - For each selected page:
+        - compute output path;
+        - decide whether to skip or attempt capture.
+    - If the file exists and `--reprocess` is not enabled:
+        - mark the page as `skipped_existing`.
+    - If the file does not exist or `--reprocess` is enabled:
+        - plan the page for capture.
+    - If test mode is enabled:
+        - limit attempted captures to `--test-limit`.
 
 3. **Browser setup**
-   - Create one Selenium WebDriver instance for the run.
-   - Use the selected browser.
-   - Configure headless mode.
-   - Configure EC2-safe Chrome flags when applicable.
+    - Create one Selenium WebDriver instance for the run.
+    - Use the selected browser.
+    - Configure headless mode.
+    - Configure EC2-safe Chrome flags when applicable.
+    - Configure Selenium page-load timeout from the command-line timeout setting.
+    - Configure Selenium script timeout from the command-line timeout setting.
 
 4. **Execution**
-   - For each planned page:
-     - request the generated URL with Selenium;
-     - wait for browser-level readiness;
-     - handle AO3 Terms of Service prompt if it appears;
-     - wait for AO3 list-page content;
-     - validate expected list-page structure;
-     - save HTML;
-     - record page-level result.
-   - If a page capture fails:
-     - retry according to `--max-retries`;
-     - if all attempts fail, mark the page as failed;
-     - continue to the next page.
-   - Apply request delay and jitter between pages.
+    - For each planned page:
+        - request the generated URL with Selenium;
+        - wait for browser-level readiness;
+        - handle AO3 Terms of Service prompt if it appears;
+        - wait for AO3 list-page content;
+        - validate expected list-page structure;
+        - save HTML;
+        - record page-level result.
+    - If a page capture fails:
+        - retry according to `--max-retries`;
+        - if all attempts fail, mark the page as failed;
+        - record a compact error summary;
+        - continue to the next page.
+    - Apply request delay and jitter between pages.
 
 5. **End-of-run summary**
-   - Count:
-     - total plan pages;
-     - selected pages after start-page filtering;
-     - skipped existing pages;
-     - attempted pages;
-     - successful captures;
-     - failed captures.
-   - Write the latest manifest.
-   - Write the per-run manifest.
-   - Log the final summary.
-   - Exit with an appropriate status code.
+    - Count:
+        - total plan pages;
+        - selected pages after start-page filtering;
+        - skipped existing pages;
+        - attempted pages;
+        - successful captures;
+        - failed captures.
+    - Write the latest manifest.
+    - Write the per-run manifest.
+    - Log the final summary.
+    - Exit with an appropriate status code.
 
 6. **Interrupt handling**
-   - Catch `KeyboardInterrupt`.
-   - Stop cleanly.
-   - Quit the browser if it exists.
-   - Write a partial manifest.
-   - Log the interruption.
-   - Exit non-zero.
+    - Catch `KeyboardInterrupt`.
+    - Stop cleanly.
+    - Quit the browser if it exists.
+    - Write a partial manifest.
+    - Log the interruption.
+    - Exit non-zero.
 
 ---
 
@@ -960,10 +1153,12 @@ Responsible for:
 - returning a configuration object or namespace.
 
 Suggested function:
+
 ```python
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for the AO3 list capture programme."""
 ```
+
 #### Logging setup
 
 Responsible for:
@@ -973,10 +1168,12 @@ Responsible for:
 - configuring console logging.
 
 Suggested function:
+
 ```python
 def setup_logging(log_file: Path) -> logging.Logger:
     """Configure append-only file logging and console logging."""
 ```
+
 #### Argument validation
 
 Responsible for:
@@ -988,10 +1185,12 @@ Responsible for:
 - checking start page ID syntax.
 
 Suggested function:
+
 ```python
 def validate_args(args: argparse.Namespace) -> None:
     """Validate command-line arguments before processing."""
 ```
+
 #### Collection plan loading
 
 Responsible for:
@@ -1002,24 +1201,29 @@ Responsible for:
 - preserving range order.
 
 Suggested function:
+
 ```python
 def load_collection_plan(plan_path: Path) -> dict:
     """Load and validate the AO3 list collection plan."""
 ```
+
 #### URL generation
 
 Responsible for:
 
 - translating plan filters into AO3 query parameters;
+- adding `view_adult=true`;
 - adding year-specific date filters;
 - adding page number;
 - returning a valid URL string.
 
 Suggested function:
+
 ```python
 def build_ao3_list_url(base_url: str, filters: dict, range_item: dict, page: int) -> str:
     """Build a canonical AO3 list URL from plan filters, year range, and page number."""
 ```
+
 #### Planning
 
 Responsible for:
@@ -1031,6 +1235,7 @@ Responsible for:
 - applying test limit.
 
 Suggested function:
+
 ```python
 def plan_captures(
     collection_plan: dict,
@@ -1042,6 +1247,7 @@ def plan_captures(
 ) -> tuple[list[dict], list[dict], int]:
     """Create planned and skipped page capture records."""
 ```
+
 #### Browser creation
 
 Responsible for:
@@ -1049,13 +1255,17 @@ Responsible for:
 - creating a Selenium WebDriver;
 - selecting Chrome or Firefox;
 - setting headless options;
-- setting EC2/server-safe Chrome flags.
+- setting EC2/server-safe Chrome flags;
+- setting a page-load timeout derived from `--timeout`;
+- setting a script timeout derived from `--timeout`.
 
 Suggested function:
+
 ```python
-def create_driver(browser: str, headless: bool, chrome_server_flags: bool) -> webdriver.Remote:
+def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeout: int) -> webdriver.Remote:
     """Create a Selenium WebDriver for the requested browser."""
 ```
+
 #### AO3 consent handling
 
 Responsible for:
@@ -1066,10 +1276,12 @@ Responsible for:
 - waiting for the prompt to disappear.
 
 Suggested function:
+
 ```python
 def accept_ao3_tos_if_present(driver: webdriver.Remote, timeout: int) -> bool:
     """Accept the AO3 Terms of Service prompt if it is present."""
 ```
+
 Return value:
 
 - `True` if a prompt was detected and accepted;
@@ -1085,15 +1297,21 @@ Responsible for:
 - waiting for list content.
 
 Suggested function:
+
 ```python
 def wait_for_ao3_list_page(driver: webdriver.Remote, timeout: int) -> dict:
     """Wait for an AO3 list page to be ready and return basic validation metadata."""
 ```
+
 This function should wait for:
+
 ```text
+ol.work.index.group
 ol.work.index.group li.work
 ```
+
 It should return validation metadata such as:
+
 ```python
 {
     "title": "...",
@@ -1102,6 +1320,23 @@ It should return validation metadata such as:
     "tos_prompt_handled": True
 }
 ```
+
+#### Error summarisation
+
+Responsible for:
+
+- converting exceptions into compact one-line strings suitable for logs and manifests;
+- preferring meaningful exception text;
+- avoiding unhelpful Selenium or ChromeDriver stack-frame fragments such as `#17 ... <unknown>`;
+- falling back to the exception type name when no useful message is available.
+
+Suggested function:
+
+```python
+def summarise_error(error: BaseException | str | None, max_length: int = 500) -> str:
+    """Create a compact one-line error summary."""
+```
+
 #### Single page capture
 
 Responsible for:
@@ -1109,19 +1344,32 @@ Responsible for:
 - loading a URL;
 - waiting for readiness;
 - saving HTML;
-- returning structured result.
+- catching ordinary per-page failures;
+- retrying failed attempts according to the configured retry policy;
+- returning a structured result instead of raising for expected page-level failures.
+
+Expected retryable per-page failures include:
+
+- Selenium validation timeouts;
+- Selenium browser or WebDriver exceptions;
+- local Selenium/WebDriver read timeouts;
+- JavaScript execution failures;
+- file-write failures for the page.
 
 Suggested function:
+
 ```python
 def capture_one_page(
     driver: webdriver.Remote,
     page_item: dict,
     timeout: int,
     max_retries: int,
-    retry_delay: int
+    retry_delay: float,
+    logger: logging.Logger
 ) -> dict:
     """Capture one AO3 list page and return a structured manifest result."""
 ```
+
 #### Manifest writing
 
 Responsible for writing:
@@ -1130,6 +1378,7 @@ Responsible for writing:
 - timestamped per-run manifest.
 
 Suggested function:
+
 ```python
 def write_manifests(
     manifest: dict,
@@ -1138,6 +1387,7 @@ def write_manifests(
 ) -> tuple[Path, Path]:
     """Write latest and per-run manifest files."""
 ```
+
 #### Main orchestration
 
 Responsible for:
@@ -1149,10 +1399,12 @@ Responsible for:
 - exit code.
 
 Suggested function:
+
 ```python
 def main() -> int:
     """Run the batch AO3 list capture workflow and return an exit code."""
 ```
+
 ---
 
 ## 8. AO3 List Capture Behaviour
@@ -1164,35 +1416,47 @@ The programme must generate URLs from the collection plan rather than storing ev
 For each range and page number, it should combine:
 
 - `base_url`;
+- `view_adult=true`;
 - shared filters;
 - date range;
 - page number.
 
+The `view_adult=true` parameter should be included in every generated list URL. AO3 may ignore it where it is not relevant, but including it makes list URLs consistent with the programme’s adult-content handling strategy and may reduce interstitial warning behaviour.
+
 For example, for year 2025 page 1:
+
 ```text
 base_url = https://archiveofourown.org/works
+view_adult = true
 date_from = 2025-01-01
 date_to = 2025-12-31
 page = 1
 ```
+
 Generated URL:
+
 ```text
-https://archiveofourown.org/works?work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
+https://archiveofourown.org/works?view_adult=true&work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 ```
+
 URL encoding can be handled by Python URL utilities.
 
 ### 8.2 Page identifier
 
 The page ID must use the format:
+
 ```text
 <year>_<page:04d>
 ```
+
 Examples:
+
 ```text
 2026_0001
 2025_3132
 2019_0531
 ```
+
 The page ID is used for:
 
 - output filename;
@@ -1203,13 +1467,17 @@ The page ID is used for:
 ### 8.3 Output filename
 
 For page ID:
+
 ```text
 2025_0120
 ```
+
 the output path must be:
+
 ```text
 corpus/01_ao3_list_pages/2025/2025_0120.html
 ```
+
 ### 8.4 Existing files
 
 If the output HTML file already exists and `--reprocess` is not enabled:
@@ -1236,13 +1504,19 @@ For each page, the programme must wait until:
 
 2. a `<body>` element is present;
 3. AO3 Terms of Service prompt has been handled if present;
-4. at least one AO3 work item is present:
+4. the AO3 list container is present:
+
+   ```css
+   ol.work.index.group
+   ```
+
+5. at least one AO3 work item is present:
 
    ```css
    ol.work.index.group li.work
    ```
 
-If the expected selector does not appear before timeout, the page capture attempt fails.
+If the expected selectors do not appear before timeout, the page capture attempt fails.
 
 ### 8.6 Page validation
 
@@ -1257,8 +1531,7 @@ After readiness, the programme should collect minimal page validation details fr
 A page should be considered valid if:
 
 - at least one `li.work` item exists;
-- the main list container exists;
-- the page title or heading is consistent with an AO3 works list.
+- the main list container exists.
 
 For the Phase 1 ranges, a page with zero work items should be treated as a failure.
 
@@ -1269,10 +1542,12 @@ The programme must save `driver.page_source` as UTF-8 encoded HTML.
 It should write to a temporary file first and then atomically replace the target file where possible.
 
 Suggested pattern:
+
 ```text
 2025_0120.html.tmp
 2025_0120.html
 ```
+
 This reduces risk of corrupt partial files if the process is interrupted during file writing.
 
 ---
@@ -1287,23 +1562,27 @@ The consent handler should:
 
 1. Check if `#tos_prompt` exists and is visible.
 2. If present:
-   - click the checkbox with ID `tos_agree`;
-   - click the checkbox with ID `data_processing_agree`;
-   - wait until the `accept_tos` button is enabled;
-   - click the button with ID `accept_tos`;
-   - wait until `#tos_prompt` disappears or is no longer visible.
+    - click the checkbox with ID `tos_agree`;
+    - click the checkbox with ID `data_processing_agree`;
+    - wait until the `accept_tos` button is enabled;
+    - click the button with ID `accept_tos`;
+    - wait until `#tos_prompt` disappears or is no longer visible.
 3. Return whether the prompt was handled.
 
 The programme should keep one browser session open for the whole run, so this prompt should usually only need handling once.
 
 The manifest should record at page level whether the prompt was handled for that page:
+
 ```json
 "tos_prompt_handled": true
 ```
+
 or:
+
 ```json
 "tos_prompt_handled": false
 ```
+
 ---
 
 ## 10. Browser and Selenium Behaviour
@@ -1341,27 +1620,44 @@ If `--workers` is not `1`, the programme must fail with a configuration error.
 ### 10.4 Chrome configuration
 
 For Chrome in headless mode, use:
+
 ```text
 --headless=new
 --disable-gpu
 --window-size=1920,1080
 ```
+
 When `--chrome-server-flags` is enabled, also use:
+
 ```text
 --no-sandbox
 --disable-dev-shm-usage
 ```
+
 ### 10.5 Firefox configuration
 
 For Firefox in headless mode, use:
+
 ```text
 --headless
 ```
+
 ### 10.6 Selenium Manager
 
 The implementation may rely on Selenium Manager to locate or download the necessary browser driver.
 
 If browser setup fails, the programme must exit with a configuration error.
+
+### 10.7 Selenium timeout configuration
+
+The programme must configure Selenium timeouts after creating the WebDriver.
+
+The configured values should be derived from the command-line `--timeout` setting:
+
+- page-load timeout: a multiple of `--timeout`, for example `timeout * 4`;
+- script timeout: `timeout`.
+
+This is required because long AO3 or browser stalls may otherwise surface as local Selenium/WebDriver communication timeouts. Those failures should be caught as page-level failures, retried, logged, and recorded in the manifest, rather than crashing the whole run.
 
 ---
 
@@ -1370,20 +1666,26 @@ If browser setup fails, the programme must exit with a configuration error.
 The programme must include rate limiting between page requests.
 
 Default suggestion:
+
 ```text
 --request-delay 3
 --request-jitter 1
 ```
+
 The delay should be applied after every attempted page capture, whether successful or failed, unless the programme is exiting.
 
 Effective wait time:
+
 ```text
 request_delay + random value between 0 and request_jitter
 ```
+
 Example:
+
 ```text
 3.0 to 4.0 seconds
 ```
+
 This is intended to reduce unnecessary load on AO3 and make the production run more respectful.
 
 ---
@@ -1393,12 +1695,14 @@ This is intended to reduce unnecessary load on AO3 and make the production run m
 ### 12.1 Manifest structure
 
 The manifest must use this general structure:
+
 ```json
 {
   "run_metadata": {
     "run_id": "20261012T143012Z",
     "tool_name": "capture_ao3_lists.py",
     "tool_version": "v1",
+    "collection_name": "ao3_original_work_english_lists_2026_2019",
     "start_time": "2026-10-12T14:30:12Z",
     "end_time": "2026-10-12T14:35:42Z",
     "test_mode": true,
@@ -1442,8 +1746,8 @@ The manifest must use this general structure:
       "page_id": "2026_0001",
       "year": 2026,
       "page": 1,
-      "url": "https://archiveofourown.org/works?...",
-      "current_url": "https://archiveofourown.org/works?...",
+      "url": "https://archiveofourown.org/works?view_adult=true&...",
+      "current_url": "https://archiveofourown.org/works?view_adult=true&...",
       "output_path": "corpus/01_ao3_list_pages/2026/2026_0001.html",
       "status": "success",
       "error": null,
@@ -1461,6 +1765,7 @@ The manifest must use this general structure:
   ]
 }
 ```
+
 ### 12.2 Required page statuses
 
 The following statuses must be supported:
@@ -1479,20 +1784,42 @@ The `error` field must be:
 - `null` when there is no error;
 - a short string when an error occurs.
 
+Error strings should be concise and useful for diagnosis. The programme should prefer meaningful exception messages and avoid recording unhelpful Selenium or ChromeDriver stack-frame fragments such as:
+
+```text
+#17 0x723dd2d3f55c <unknown>
+```
+
+If an exception message contains only unhelpful stack-frame lines, the programme should fall back to the exception type name.
+
 Example:
+
 ```json
 {
   "page_id": "2026_0001",
   "status": "failed_validation",
-  "error": "Expected selector ol.work.index.group li.work was not found before timeout"
+  "error": "Expected AO3 work items were not found."
 }
 ```
+
+Another possible timeout-related example:
+
+```json
+{
+  "page_id": "2025_3050",
+  "status": "failed",
+  "error": "Read timed out. (read timeout=120)"
+}
+```
+
 ### 12.4 Partial manifests
 
 If interrupted, the manifest should include:
+
 ```json
 "interrupted": true
 ```
+
 inside `run_metadata`.
 
 Completed, failed, and skipped results collected before interruption must be written.
@@ -1504,19 +1831,25 @@ Completed, failed, and skipped results collected before interruption must be wri
 The programme must write an append-only log file.
 
 Default:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
+
 ### Log format
 
 Each line should follow this format:
+
 ```text
 [YYYY-MM-DD HH:MM:SS] LEVEL  message
 ```
+
 Example:
+
 ```text
 [2026-10-12 14:30:12] INFO  Starting capture_ao3_lists.py run_id=20261012T143012Z
 ```
+
 ### Required log events
 
 The programme must log:
@@ -1535,6 +1868,7 @@ The programme must log:
 - reprocess setting;
 - start page ID, if provided;
 - timeout;
+- configured Selenium page-load and script timeout behaviour;
 - max retries;
 - retry delay;
 - request delay and jitter;
@@ -1549,6 +1883,7 @@ The programme must log:
 - each successful capture;
 - each failed capture;
 - each retry;
+- compact and meaningful error summaries;
 - manifest write paths;
 - end-of-run summary;
 - keyboard interrupts;
@@ -1556,20 +1891,24 @@ The programme must log:
 - browser setup failures.
 
 ### Example log lines
+
 ```text
 [2026-10-12 14:30:12] INFO  Starting capture_ao3_lists.py run_id=20261012T143012Z
 [2026-10-12 14:30:12] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
 [2026-10-12 14:30:12] INFO  Output directory: corpus/01_ao3_list_pages
 [2026-10-12 14:30:12] INFO  Browser: chrome; headless=True
+[2026-10-12 14:30:12] INFO  Chrome server flags: True
 [2026-10-12 14:30:12] INFO  Test mode: True; test_limit=5
+[2026-10-12 14:30:12] INFO  Timeout seconds: 30
 [2026-10-12 14:30:13] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
 [2026-10-12 14:30:13] INFO  Total pages in plan: 15044
-[2026-10-12 14:30:14] INFO  Capturing 2026_0001 https://archiveofourown.org/works?...
+[2026-10-12 14:30:14] INFO  Capturing 2026_0001 https://archiveofourown.org/works?view_adult=true&...
 [2026-10-12 14:30:18] INFO  AO3 Terms of Service prompt accepted
 [2026-10-12 14:30:19] INFO  SUCCESS 2026_0001 -> corpus/01_ao3_list_pages/2026/2026_0001.html work_items=20
 [2026-10-12 14:35:42] INFO  Wrote latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 [2026-10-12 14:35:42] INFO  Finished run: succeeded=5 failed=0 skipped_existing=0
 ```
+
 ---
 
 ## 14. Error Handling and Resiliency
@@ -1600,17 +1939,23 @@ Examples:
 - page load timeout;
 - AO3 transient error;
 - browser timeout;
+- local Selenium/WebDriver communication timeout;
 - expected selector missing;
 - TOS prompt cannot be accepted;
 - file write error for one page;
-- unexpected Selenium exception for one page.
+- unexpected Selenium exception for one page;
+- JavaScript execution error during readiness checks.
 
 For each per-page error:
 
 - retry up to `--max-retries`;
+- use `--retry-delay` between attempts;
 - if still failing, mark the page as `failed` or `failed_validation`;
-- log the error;
+- log a compact, meaningful error summary;
+- avoid logging only unhelpful Selenium stack-frame fragments;
 - continue to the next page.
+
+A local WebDriver read timeout, such as a timeout while Python is waiting for ChromeDriver on `localhost`, must be treated as a retryable per-page failure rather than an uncaught exception that aborts the entire run.
 
 ### 14.3 Keyboard interruption
 
@@ -1658,6 +2003,7 @@ At the top of `capture_ao3_lists.py`, include a module-level docstring explainin
 - manifest and logging outputs.
 
 Suggested module docstring:
+
 ```python
 """
 Capture AO3 list pages for Phase 1 corpus data collection.
@@ -1691,6 +2037,7 @@ The script writes an append-only log file and JSON manifests describing
 run-level metadata and per-page capture status.
 """
 ```
+
 ### 15.2 Function docstrings
 
 All major functions must include docstrings describing:
@@ -1712,6 +2059,7 @@ At minimum, docstrings are required for:
 - `create_driver`
 - `accept_ao3_tos_if_present`
 - `wait_for_ao3_list_page`
+- `summarise_error`
 - `capture_one_page`
 - `write_manifests`
 - `main`
@@ -1721,6 +2069,7 @@ At minimum, docstrings are required for:
 ## 16. Suggested Constants
 
 The implementation should define constants near the top of the file:
+
 ```python
 TOOL_NAME = "capture_ao3_lists.py"
 TOOL_VERSION = "v1"
@@ -1742,10 +2091,12 @@ DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_RETRIES = 2
 DEFAULT_RETRY_DELAY_SECONDS = 10
 
-DEFAULT_REQUEST_DELAY_SECONDS = 3
-DEFAULT_REQUEST_JITTER_SECONDS = 1
+DEFAULT_REQUEST_DELAY_SECONDS = 3.0
+DEFAULT_REQUEST_JITTER_SECONDS = 1.0
 
 AO3_LIST_READY_SELECTOR = "ol.work.index.group li.work"
+AO3_LIST_CONTAINER_SELECTOR = "ol.work.index.group"
+AO3_MAIN_HEADING_SELECTOR = "#main h2.heading"
 AO3_TOS_PROMPT_SELECTOR = "#tos_prompt"
 AO3_TOS_CHECKBOX_SELECTOR = "#tos_agree"
 AO3_DATA_PROCESSING_CHECKBOX_SELECTOR = "#data_processing_agree"
@@ -1756,6 +2107,7 @@ EXIT_CAPTURE_FAILURE = 1
 EXIT_CONFIGURATION_ERROR = 2
 EXIT_INTERRUPTED = 130
 ```
+
 ---
 
 ## 17. Development Notes
@@ -1766,13 +2118,17 @@ The first implementation should prioritise:
 
 - correct sequential execution;
 - reliable URL generation from the JSON plan;
+- inclusion of `view_adult=true` in generated AO3 list URLs;
 - stable Selenium capture;
+- explicit Selenium page-load and script timeout configuration;
 - AO3 Terms of Service handling;
 - page-specific readiness checks;
 - safe resumability;
 - append-only logging;
 - robust manifest output;
 - clear error handling;
+- retryable handling of local WebDriver read timeouts;
+- meaningful error summaries;
 - portability to EC2.
 
 ### Out of scope for v1
@@ -1804,6 +2160,8 @@ Use Selenium plus Python standard-library modules where possible:
 - `typing`
 
 Selenium is required for browser automation.
+
+`urllib3` is also required so the programme can explicitly catch local Selenium/WebDriver read timeouts and handle them as retryable page-level failures.
 
 No Beautiful Soup dependency is required for `capture_ao3_lists.py` because the programme only performs minimal DOM validation through Selenium and saves HTML.
 
@@ -1863,76 +2221,92 @@ The programme is considered complete when the following conditions are met:
 
 13. The programme generates AO3 URLs from the collection plan rather than requiring every URL to be listed manually.
 
-14. The programme supports Chrome by default.
+14. The programme includes `view_adult=true` in generated AO3 list URLs.
 
-15. The programme supports Firefox with:
+15. The programme supports Chrome by default.
 
-   ```bash
-   --browser firefox
-   ```
+16. The programme supports Firefox with:
 
-16. The programme runs in headless mode by default.
+```bash
+--browser firefox
+```
 
-17. The programme can run on EC2 using Chrome headless/server flags.
+17. The programme runs in headless mode by default.
 
-18. The programme handles AO3’s Terms of Service prompt when present.
+18. The programme can run on EC2 using Chrome headless/server flags.
 
-19. The programme waits for AO3 list content using:
+19. The programme handles AO3’s Terms of Service prompt when present.
 
-   ```text
-   ol.work.index.group li.work
-   ```
+20. The programme waits for the AO3 list container using:
 
-20. The programme records the number of detected work items for each captured page.
+```text
+ol.work.index.group
+```
 
-21. Failed page captures do not stop the full batch.
+21. The programme waits for AO3 list content using:
 
-22. The programme retries failed captures according to `--max-retries`.
+```text
+ol.work.index.group li.work
+```
 
-23. The programme supports starting from a specific page ID with:
+22. The programme records the number of detected work items for each captured page.
 
-   ```bash
-   --start-page-id 2025_0120
-   ```
+23. Failed page captures do not stop the full batch.
 
-24. If `--start-page-id` is not found in the planned page list, the programme exits with a configuration error.
+24. The programme retries failed captures according to `--max-retries`.
 
-25. The programme applies a configurable delay between requests.
+25. The programme catches local Selenium/WebDriver read timeouts as page-level failures rather than allowing them to crash the full run.
 
-26. The programme writes an append-only log file at:
+26. The programme configures Selenium page-load and script timeouts from the command-line timeout setting.
 
-   ```text
-   corpus/01_ao3_list_pages/capture_ao3_lists.log
-   ```
+27. The programme records meaningful compact error summaries in logs and manifests.
 
-27. The programme writes a latest manifest at:
+28. The programme avoids reducing Selenium errors to unhelpful stack-frame fragments such as `#17 ... <unknown>`.
 
-   ```text
-   corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
-   ```
+29. The programme supports starting from a specific page ID with:
 
-28. A timestamped per-run manifest is also created for each execution.
+```bash
+--start-page-id 2025_0120
+```
 
-29. The manifest records:
-   - run metadata;
-   - configuration;
-   - collection plan path;
-   - output directory;
-   - year order;
-   - page order;
-   - per-page status;
-   - generated URLs;
-   - output paths;
-   - validation metadata;
-   - errors;
-   - timings;
-   - summary counts.
+30. If `--start-page-id` is not found in the planned page list, the programme exits with a configuration error.
 
-30. The programme exits with:
-   - `0` if all attempted captures succeed or are skipped;
-   - `1` if any attempted capture fails;
-   - `2` for configuration errors;
-   - `130` for keyboard interruption.
+31. The programme applies a configurable delay between requests.
+
+32. The programme writes an append-only log file at:
+
+```text
+corpus/01_ao3_list_pages/capture_ao3_lists.log
+```
+
+33. The programme writes a latest manifest at:
+
+```text
+corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+```
+
+34. A timestamped per-run manifest is also created for each execution.
+
+35. The manifest records:
+- run metadata;
+- configuration;
+- collection plan path;
+- output directory;
+- year order;
+- page order;
+- per-page status;
+- generated URLs;
+- output paths;
+- validation metadata;
+- errors;
+- timings;
+- summary counts.
+
+36. The programme exits with:
+- `0` if all attempted captures succeed or are skipped;
+- `1` if any attempted capture fails;
+- `2` for configuration errors;
+- `130` for keyboard interruption.
 
 ---
 
@@ -1945,51 +2319,81 @@ The following section can be added to project documentation.
 The `capture_ao3_lists.py` programme captures AO3 list pages for Phase 1 data collection.
 
 It reads the collection plan:
+
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
+
 The plan defines yearly AO3 list ranges for English works tagged as `Original Work`, excluding crossovers, from 2026 down to 2019.
 
 Recent years are captured first because AO3 users are more active in recent periods, making those list ranges more susceptible to change.
 
 Default test run:
+
 ```bash
 python capture_ao3_lists.py
 ```
+
 This captures up to 5 planned missing list pages.
 
 Full run:
+
 ```bash
 python capture_ao3_lists.py --no-test-mode
 ```
+
 To resume from a specific page ID:
+
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
+
+To resume more conservatively after transient AO3, browser, or WebDriver instability:
+
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2025_3050 \
+  --request-delay 6 \
+  --request-jitter 4 \
+  --max-retries 4 \
+  --retry-delay 20 \
+  --timeout 45
+```
+
 The programme saves rendered HTML files as:
+
 ```text
 corpus/01_ao3_list_pages/<year>/<year>_<page:04d>.html
 ```
+
 Example:
+
 ```text
 corpus/01_ao3_list_pages/2025/2025_0001.html
 ```
+
 The programme is safe to re-run: existing pages are skipped by default.
 
 To force re-capture:
+
 ```bash
 python capture_ao3_lists.py --no-test-mode --reprocess
 ```
+
 The programme writes:
+
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
+
 A timestamped per-run manifest is also created for each execution.
 
 For EC2:
+
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
@@ -1999,4 +2403,5 @@ nohup bash run_python_ec2.sh \
     --request-jitter 1 \
 > process_output.log 2>&1 &
 ```
+
 This programme only captures list-page HTML. Metadata extraction is handled later by a separate offline processing step.
