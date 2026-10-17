@@ -17,6 +17,12 @@ The script handles AO3's Terms of Service prompt when it appears, waits for
 AO3 list-page content, saves rendered HTML, and records page-level validation
 information in a JSON manifest.
 
+Diagnosis mode can be enabled with --diagnosis-mode. When enabled, failed
+attempts produce diagnostic HTML, screenshot, and JSON summary files that help
+identify whether a timeout was caused by AO3 slowness, Cloudflare/browser
+challenge pages, AO3 error pages, Terms of Service prompts, rate limiting, or
+unexpected page content.
+
 Example:
     python capture_ao3_lists.py
 
@@ -25,6 +31,9 @@ Full run:
 
 Resume from a specific page:
     python capture_ao3_lists.py --no-test-mode --start-page-id 2025_0120
+
+Diagnostic run for one page:
+    python capture_ao3_lists.py --start-page-id 2026_3624 --test-limit 1 --reprocess --diagnosis-mode
 
 The script writes an append-only log file and JSON manifests describing
 run-level metadata and per-page capture status.
@@ -61,7 +70,7 @@ from urllib3.exceptions import ReadTimeoutError
 
 
 TOOL_NAME = "capture_ao3_lists.py"
-TOOL_VERSION = "v1"
+TOOL_VERSION = "v2-diagnosis"
 
 DEFAULT_COLLECTION_PLAN_PATH = "corpus/00_sources/ao3_list_collection_plan.json"
 DEFAULT_OUTPUT_DIR = "corpus/01_ao3_list_pages"
@@ -82,6 +91,8 @@ DEFAULT_RETRY_DELAY_SECONDS = 10
 
 DEFAULT_REQUEST_DELAY_SECONDS = 3.0
 DEFAULT_REQUEST_JITTER_SECONDS = 1.0
+
+DEFAULT_DIAGNOSIS_MODE = False
 
 AO3_LIST_READY_SELECTOR = "ol.work.index.group li.work"
 AO3_LIST_CONTAINER_SELECTOR = "ol.work.index.group"
@@ -117,12 +128,7 @@ def make_run_id() -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments for the AO3 list capture programme.
-
-    Returns:
-        An argparse namespace containing command-line values. Semantic validation
-        is performed separately by validate_args().
-    """
+    """Parse command-line arguments for the AO3 list capture programme."""
     parser = argparse.ArgumentParser(
         description="Capture AO3 list pages as rendered HTML files using Selenium."
     )
@@ -249,22 +255,30 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_REQUEST_JITTER_SECONDS,
         help=f"Maximum random extra delay between requests. Default: {DEFAULT_REQUEST_JITTER_SECONDS}",
     )
+    parser.add_argument(
+        "--diagnosis-mode",
+        action="store_true",
+        default=DEFAULT_DIAGNOSIS_MODE,
+        help=(
+            "Save diagnostic HTML, screenshots, and JSON page summaries for failed "
+            "capture attempts."
+        ),
+    )
+    parser.add_argument(
+        "--diagnostics-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory for diagnostic artifacts. Default: "
+            "<output-dir>/diagnostics/<run-id>/"
+        ),
+    )
 
     return parser.parse_args()
 
 
 def setup_logging(log_file: Path) -> logging.Logger:
-    """Configure append-only file logging and console logging.
-
-    Args:
-        log_file: Path where log messages should be appended.
-
-    Returns:
-        A configured logger for this programme.
-
-    Raises:
-        ConfigurationError: If the log directory cannot be created.
-    """
+    """Configure append-only file logging and console logging."""
     try:
         log_file.parent.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
@@ -295,14 +309,7 @@ def setup_logging(log_file: Path) -> logging.Logger:
 
 
 def validate_args(args: argparse.Namespace) -> None:
-    """Validate command-line arguments before processing.
-
-    Args:
-        args: Parsed command-line arguments.
-
-    Raises:
-        ConfigurationError: If an argument or path is invalid.
-    """
+    """Validate command-line arguments before processing."""
     if not args.collection_plan.exists():
         raise ConfigurationError(f"Collection plan does not exist: {args.collection_plan}")
     if not args.collection_plan.is_file():
@@ -331,25 +338,14 @@ def validate_args(args: argparse.Namespace) -> None:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         args.log_file.parent.mkdir(parents=True, exist_ok=True)
         args.manifest_file.parent.mkdir(parents=True, exist_ok=True)
+        if args.diagnostics_dir is not None:
+            args.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise ConfigurationError(f"Could not create required output directories: {exc}") from exc
 
 
 def load_collection_plan(plan_path: Path) -> dict[str, Any]:
-    """Load and validate the AO3 list collection plan.
-
-    This function performs file I/O.
-
-    Args:
-        plan_path: Path to the JSON plan file.
-
-    Returns:
-        The validated collection plan dictionary.
-
-    Raises:
-        ConfigurationError: If the file cannot be read, JSON is invalid, or
-            required fields are missing/invalid.
-    """
+    """Load and validate the AO3 list collection plan."""
     try:
         with plan_path.open("r", encoding="utf-8") as input_file:
             plan = json.load(input_file)
@@ -427,17 +423,7 @@ def load_collection_plan(plan_path: Path) -> dict[str, Any]:
 
 
 def build_ao3_list_url(base_url: str, filters: dict[str, Any], range_item: dict[str, Any], page: int) -> str:
-    """Build a canonical AO3 list URL from plan filters, year range, and page number.
-
-    Args:
-        base_url: AO3 works base URL.
-        filters: Shared filters from the collection plan.
-        range_item: Year-specific range object from the collection plan.
-        page: Page number to request.
-
-    Returns:
-        A URL string with URL-encoded query parameters.
-    """
+    """Build a canonical AO3 list URL from plan filters, year range, and page number."""
     query_params = {
         "view_adult": "true",
         "work_search[sort_column]": filters.get("sort_column", ""),
@@ -464,15 +450,7 @@ def make_page_id(year: int, page: int) -> str:
 
 
 def make_skipped_existing_result(page_item: dict[str, Any], output_path: Path) -> dict[str, Any]:
-    """Create a manifest result for a page skipped because output already exists.
-
-    Args:
-        page_item: Planned page metadata.
-        output_path: Existing output HTML path.
-
-    Returns:
-        A structured page-level manifest dictionary.
-    """
+    """Create a manifest result for a page skipped because output already exists."""
     timestamp = utc_timestamp()
     return {
         "page_id": page_item["page_id"],
@@ -500,15 +478,7 @@ def make_skipped_existing_result(page_item: dict[str, Any], output_path: Path) -
 
 
 def expand_collection_plan(collection_plan: dict[str, Any], output_dir: Path) -> list[dict[str, Any]]:
-    """Expand a collection plan into ordered page records.
-
-    Args:
-        collection_plan: Validated collection plan dictionary.
-        output_dir: Base output directory for HTML pages.
-
-    Returns:
-        Ordered page item dictionaries preserving collection plan range order.
-    """
+    """Expand a collection plan into ordered page records."""
     pages: list[dict[str, Any]] = []
 
     for range_item in collection_plan["ranges"]:
@@ -548,27 +518,7 @@ def plan_captures(
         reprocess: bool,
         start_page_id: str | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
-    """Create planned and skipped page capture records.
-
-    This function performs filesystem checks but does not perform network I/O.
-
-    Args:
-        collection_plan: Validated collection plan dictionary.
-        output_dir: Directory where captured HTML files are saved.
-        test_mode: Whether to limit planned attempts.
-        test_limit: Maximum planned attempts when test mode is active.
-        reprocess: Whether existing HTML files should be re-captured.
-        start_page_id: Optional page ID from which planning should start.
-
-    Returns:
-        A tuple containing:
-        - planned capture records;
-        - skipped-existing result records;
-        - total number of pages in the full collection plan.
-
-    Raises:
-        ConfigurationError: If start_page_id is provided but not found.
-    """
+    """Create planned and skipped page capture records."""
     all_pages = expand_collection_plan(collection_plan, output_dir)
     total_pages = len(all_pages)
     selected_pages = all_pages
@@ -602,20 +552,7 @@ def plan_captures(
 
 
 def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeout: int) -> WebDriver:
-    """Create a Selenium WebDriver for the requested browser.
-
-    Args:
-        browser: Browser name, either "chrome" or "firefox".
-        headless: Whether to run in headless mode.
-        chrome_server_flags: Whether to use Chrome options suitable for EC2.
-        timeout: Base timeout in seconds from command-line configuration.
-
-    Returns:
-        A Selenium WebDriver instance.
-
-    Raises:
-        ConfigurationError: If the browser is unsupported or cannot be started.
-    """
+    """Create a Selenium WebDriver for the requested browser."""
     try:
         if browser == "chrome":
             options = ChromeOptions()
@@ -653,15 +590,7 @@ def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeo
 
 
 def element_is_displayed(driver: WebDriver, css_selector: str) -> bool:
-    """Return whether an element exists and is displayed.
-
-    Args:
-        driver: Selenium WebDriver.
-        css_selector: CSS selector to find.
-
-    Returns:
-        True when the element exists and is displayed, otherwise False.
-    """
+    """Return whether an element exists and is displayed."""
     try:
         return driver.find_element(By.CSS_SELECTOR, css_selector).is_displayed()
     except (NoSuchElementException, StaleElementReferenceException):
@@ -669,21 +598,7 @@ def element_is_displayed(driver: WebDriver, css_selector: str) -> bool:
 
 
 def accept_ao3_tos_if_present(driver: WebDriver, timeout: int) -> bool:
-    """Accept the AO3 Terms of Service prompt if it is present.
-
-    This function performs browser interaction I/O.
-
-    Args:
-        driver: Selenium WebDriver.
-        timeout: Maximum seconds to wait while interacting with the prompt.
-
-    Returns:
-        True if the prompt was present and accepted, False otherwise.
-
-    Raises:
-        TimeoutException: If the prompt is present but cannot be completed.
-        WebDriverException: If Selenium interaction fails.
-    """
+    """Accept the AO3 Terms of Service prompt if it is present."""
     if not element_is_displayed(driver, AO3_TOS_PROMPT_SELECTOR):
         return False
 
@@ -705,15 +620,7 @@ def accept_ao3_tos_if_present(driver: WebDriver, timeout: int) -> bool:
 
 
 def get_optional_text(driver: WebDriver, css_selector: str) -> str | None:
-    """Return stripped text for the first matching element, or None.
-
-    Args:
-        driver: Selenium WebDriver.
-        css_selector: CSS selector.
-
-    Returns:
-        Element text or None if no element is found.
-    """
+    """Return stripped text for the first matching element, or None."""
     try:
         text = driver.find_element(By.CSS_SELECTOR, css_selector).text.strip()
         return text or None
@@ -722,22 +629,7 @@ def get_optional_text(driver: WebDriver, css_selector: str) -> str | None:
 
 
 def wait_for_ao3_list_page(driver: WebDriver, timeout: int) -> dict[str, Any]:
-    """Wait for an AO3 list page to be ready and return validation metadata.
-
-    This function performs browser interaction and DOM inspection.
-
-    Args:
-        driver: Selenium WebDriver.
-        timeout: Maximum seconds to wait.
-
-    Returns:
-        Validation metadata including title, heading, work count, and whether
-        the AO3 TOS prompt was handled.
-
-    Raises:
-        TimeoutException: If readiness checks fail.
-        WebDriverException: If Selenium operations fail.
-    """
+    """Wait for an AO3 list page to be ready and return validation metadata."""
     wait = WebDriverWait(driver, timeout)
 
     wait.until(lambda current_driver: current_driver.execute_script("return document.readyState") == "complete")
@@ -761,15 +653,7 @@ def wait_for_ao3_list_page(driver: WebDriver, timeout: int) -> dict[str, Any]:
 
 
 def summarise_error(error: BaseException | str | None, max_length: int = 500) -> str:
-    """Create a compact one-line error summary.
-
-    Args:
-        error: Exception, string, or None.
-        max_length: Maximum returned length.
-
-    Returns:
-        Short error summary.
-    """
+    """Create a compact one-line error summary."""
     if error is None:
         return "Unknown error"
 
@@ -797,17 +681,7 @@ def summarise_error(error: BaseException | str | None, max_length: int = 500) ->
 
 
 def write_html_atomic(output_path: Path, html: str) -> None:
-    """Write an HTML file using a temporary file and replacement.
-
-    This function performs filesystem output.
-
-    Args:
-        output_path: Destination HTML file.
-        html: HTML content to write.
-
-    Raises:
-        OSError: If the file cannot be written.
-    """
+    """Write an HTML file using a temporary file and replacement."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = output_path.with_name(f"{output_path.name}.tmp")
 
@@ -815,6 +689,188 @@ def write_html_atomic(output_path: Path, html: str) -> None:
         output_file.write(html)
 
     temporary_path.replace(output_path)
+
+
+def get_body_preview(driver: WebDriver, max_length: int = 2000) -> str | None:
+    """Return a compact preview of the page body text, if available."""
+    try:
+        body_text = driver.find_element(By.TAG_NAME, "body").text.strip()
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, ReadTimeoutError):
+        return None
+
+    if not body_text:
+        return None
+
+    if len(body_text) > max_length:
+        return body_text[:max_length] + "..."
+
+    return body_text
+
+
+def get_page_diagnosis_category(
+        title: str | None,
+        heading: str | None,
+        body_preview: str | None,
+        has_list_container: bool,
+        has_work_items: bool,
+        has_tos_prompt: bool,
+) -> str:
+    """Classify the loaded page state for diagnostic reporting."""
+    combined_text = " ".join(
+        text for text in [title, heading, body_preview] if text
+    ).lower()
+
+    if has_work_items:
+        return "ao3_list_ready"
+    if has_list_container and not has_work_items:
+        return "ao3_list_container_without_items"
+    if has_tos_prompt:
+        return "ao3_tos_prompt"
+    if "cloudflare" in combined_text:
+        return "cloudflare_or_browser_challenge"
+    if "checking if the site connection is secure" in combined_text:
+        return "cloudflare_or_browser_challenge"
+    if "just a moment" in combined_text and "checking" in combined_text:
+        return "cloudflare_or_browser_challenge"
+    if "retry later" in combined_text:
+        return "ao3_temporary_error"
+    if "temporarily unavailable" in combined_text:
+        return "ao3_temporary_error"
+    if "maintenance" in combined_text:
+        return "ao3_maintenance"
+    if "rate limit" in combined_text:
+        return "rate_limited"
+    if "too many requests" in combined_text:
+        return "rate_limited"
+    if "archive of our own" in combined_text:
+        return "ao3_unexpected_page"
+
+    return "unknown_page_state"
+
+
+def collect_page_diagnostics(
+        driver: WebDriver,
+        page_item: dict[str, Any],
+        diagnostics_dir: Path,
+        attempt_number: int,
+        error: BaseException | str | None,
+        logger: logging.Logger,
+) -> dict[str, Any]:
+    """Save diagnostic artifacts for a failed page capture attempt."""
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+
+    artifact_stem = f"{page_item['page_id']}_attempt_{attempt_number}"
+    html_path = diagnostics_dir / f"{artifact_stem}.html"
+    screenshot_path = diagnostics_dir / f"{artifact_stem}.png"
+    json_path = diagnostics_dir / f"{artifact_stem}.json"
+
+    current_url = None
+    title = None
+    heading = None
+    body_preview = None
+    html_saved = False
+    screenshot_saved = False
+    has_list_container = False
+    has_work_items = False
+    has_tos_prompt = False
+
+    try:
+        current_url = driver.current_url
+    except (WebDriverException, ReadTimeoutError):
+        current_url = None
+
+    try:
+        title = driver.title or None
+    except (WebDriverException, ReadTimeoutError):
+        title = None
+
+    try:
+        heading = get_optional_text(driver, AO3_MAIN_HEADING_SELECTOR)
+    except (WebDriverException, ReadTimeoutError):
+        heading = None
+
+    body_preview = get_body_preview(driver)
+
+    try:
+        has_list_container = bool(driver.find_elements(By.CSS_SELECTOR, AO3_LIST_CONTAINER_SELECTOR))
+        has_work_items = bool(driver.find_elements(By.CSS_SELECTOR, AO3_LIST_READY_SELECTOR))
+        has_tos_prompt = element_is_displayed(driver, AO3_TOS_PROMPT_SELECTOR)
+    except (WebDriverException, ReadTimeoutError):
+        has_list_container = False
+        has_work_items = False
+        has_tos_prompt = False
+
+    try:
+        html = driver.page_source
+        write_html_atomic(html_path, html)
+        html_saved = True
+    except (OSError, WebDriverException, ReadTimeoutError) as exc:
+        logger.warning("Could not save diagnostic HTML for %s: %s", page_item["page_id"], summarise_error(exc))
+
+    try:
+        driver.save_screenshot(str(screenshot_path))
+        screenshot_saved = True
+    except (WebDriverException, ReadTimeoutError) as exc:
+        logger.warning("Could not save diagnostic screenshot for %s: %s", page_item["page_id"], summarise_error(exc))
+
+    diagnosis_category = get_page_diagnosis_category(
+        title=title,
+        heading=heading,
+        body_preview=body_preview,
+        has_list_container=has_list_container,
+        has_work_items=has_work_items,
+        has_tos_prompt=has_tos_prompt,
+    )
+
+    diagnosis = {
+        "diagnosis_category": diagnosis_category,
+        "attempt_number": attempt_number,
+        "page_id": page_item["page_id"],
+        "source_url": page_item["url"],
+        "current_url": current_url,
+        "title": title,
+        "heading": heading,
+        "body_preview": body_preview,
+        "has_list_container": has_list_container,
+        "has_work_items": has_work_items,
+        "has_tos_prompt": has_tos_prompt,
+        "error_type": type(error).__name__ if error is not None else None,
+        "error": summarise_error(error),
+        "html_path": str(html_path) if html_saved else None,
+        "screenshot_path": str(screenshot_path) if screenshot_saved else None,
+        "json_path": str(json_path),
+    }
+
+    try:
+        with json_path.open("w", encoding="utf-8") as output_file:
+            json.dump(diagnosis, output_file, ensure_ascii=False, indent=2)
+    except OSError as exc:
+        logger.warning("Could not save diagnostic JSON for %s: %s", page_item["page_id"], summarise_error(exc))
+
+    return diagnosis
+
+
+def make_default_validation() -> dict[str, Any]:
+    """Create an empty validation structure."""
+    return {
+        "title": None,
+        "heading": None,
+        "work_items_detected": None,
+        "tos_prompt_handled": False,
+    }
+
+
+def add_diagnosis_to_validation(
+        validation: dict[str, Any] | None,
+        diagnosis: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Attach diagnostic metadata to validation metadata."""
+    if diagnosis is None:
+        return validation
+
+    merged_validation = validation.copy() if validation is not None else make_default_validation()
+    merged_validation["diagnosis"] = diagnosis
+    return merged_validation
 
 
 def make_failed_result(
@@ -827,21 +883,7 @@ def make_failed_result(
         validation: dict[str, Any] | None = None,
         current_url: str | None = None,
 ) -> dict[str, Any]:
-    """Create a failed page result for the manifest.
-
-    Args:
-        page_item: Page metadata.
-        status: Failure status.
-        error: Error object or message.
-        start_time: ISO timestamp when capture began.
-        start_monotonic: Monotonic start time.
-        retries_used: Number of retries used.
-        validation: Optional validation metadata.
-        current_url: Optional current browser URL.
-
-    Returns:
-        Manifest-ready failed result dictionary.
-    """
+    """Create a failed page result for the manifest."""
     return {
         "page_id": page_item["page_id"],
         "year": page_item["year"],
@@ -855,12 +897,7 @@ def make_failed_result(
         "duration_seconds": round(time.monotonic() - start_monotonic, 3),
         "start_time": start_time,
         "end_time": utc_timestamp(),
-        "validation": validation or {
-            "title": None,
-            "heading": None,
-            "work_items_detected": None,
-            "tos_prompt_handled": False,
-        },
+        "validation": validation or make_default_validation(),
     }
 
 
@@ -871,23 +908,10 @@ def capture_one_page(
         max_retries: int,
         retry_delay: float,
         logger: logging.Logger,
+        diagnosis_mode: bool = False,
+        diagnostics_dir: Path | None = None,
 ) -> dict[str, Any]:
-    """Capture one AO3 list page and return a structured manifest result.
-
-    This function performs browser and filesystem I/O. It catches ordinary
-    per-page failures and returns manifest-ready dictionaries instead of raising.
-
-    Args:
-        driver: Selenium WebDriver.
-        page_item: Page metadata including URL and output path.
-        timeout: Maximum seconds to wait for readiness.
-        max_retries: Number of retries after the first failed attempt.
-        retry_delay: Seconds to wait between failed attempts.
-        logger: Logger used to record retry events.
-
-    Returns:
-        Structured result dictionary for the page.
-    """
+    """Capture one AO3 list page and return a structured manifest result."""
     run_start_time = utc_timestamp()
     run_start_monotonic = time.monotonic()
     attempts_allowed = max_retries + 1
@@ -896,6 +920,7 @@ def capture_one_page(
     last_status = "failed"
     last_validation: dict[str, Any] | None = None
     last_current_url: str | None = None
+    last_diagnosis: dict[str, Any] | None = None
 
     for attempt_number in range(1, attempts_allowed + 1):
         try:
@@ -939,6 +964,25 @@ def capture_one_page(
             except (WebDriverException, ReadTimeoutError):
                 last_current_url = None
 
+        if diagnosis_mode and diagnostics_dir is not None:
+            last_diagnosis = collect_page_diagnostics(
+                driver=driver,
+                page_item=page_item,
+                diagnostics_dir=diagnostics_dir,
+                attempt_number=attempt_number,
+                error=last_error,
+                logger=logger,
+            )
+            last_validation = add_diagnosis_to_validation(last_validation, last_diagnosis)
+            logger.warning(
+                "DIAGNOSIS %s attempt=%s category=%s title=%r current_url=%r",
+                page_item["page_id"],
+                attempt_number,
+                last_diagnosis.get("diagnosis_category"),
+                last_diagnosis.get("title"),
+                last_diagnosis.get("current_url"),
+            )
+
         if attempt_number < attempts_allowed:
             retries_used += 1
             logger.warning(
@@ -974,22 +1018,7 @@ def create_manifest(
         results: list[dict[str, Any]],
         interrupted: bool = False,
 ) -> dict[str, Any]:
-    """Create the JSON manifest object.
-
-    Args:
-        args: Parsed command-line arguments.
-        collection_plan: Loaded collection plan, if available.
-        run_id: Run identifier.
-        start_time: Run start timestamp.
-        end_time: Run end timestamp.
-        total_pages_in_plan: Number of pages in the full plan.
-        planned_attempts: Number of pages selected for attempted capture.
-        results: Per-page results.
-        interrupted: Whether the run was interrupted.
-
-    Returns:
-        Manifest dictionary ready to be written as JSON.
-    """
+    """Create the JSON manifest object."""
     succeeded = sum(1 for item in results if item["status"] == "success")
     failed = sum(1 for item in results if item["status"] in {"failed", "failed_validation"})
     skipped_existing = sum(1 for item in results if item["status"] == "skipped_existing")
@@ -1034,6 +1063,8 @@ def create_manifest(
                 "request_delay_seconds": args.request_delay,
                 "request_jitter_seconds": args.request_jitter,
                 "start_page_id": args.start_page_id,
+                "diagnosis_mode": args.diagnosis_mode,
+                "diagnostics_dir": str(args.diagnostics_dir) if args.diagnostics_dir is not None else None,
             },
             "plan_summary": {
                 "range_order": range_order,
@@ -1060,21 +1091,7 @@ def write_manifests(
         manifest_file: Path,
         run_id: str,
 ) -> tuple[Path, Path]:
-    """Write latest and per-run manifest files.
-
-    This function performs JSON file output.
-
-    Args:
-        manifest: Manifest dictionary to write.
-        manifest_file: Path to the latest manifest file.
-        run_id: Run identifier used for the per-run manifest filename.
-
-    Returns:
-        Tuple of latest manifest path and per-run manifest path.
-
-    Raises:
-        OSError: If writing either manifest fails.
-    """
+    """Write latest and per-run manifest files."""
     manifest_file.parent.mkdir(parents=True, exist_ok=True)
     per_run_manifest_file = manifest_file.with_name(
         f"{manifest_file.stem}_{run_id}{manifest_file.suffix}"
@@ -1096,15 +1113,7 @@ def log_configuration(
         total_pages_in_plan: int,
         run_id: str,
 ) -> None:
-    """Log startup configuration details.
-
-    Args:
-        logger: Configured programme logger.
-        args: Parsed command-line arguments.
-        collection_plan: Loaded collection plan.
-        total_pages_in_plan: Number of planned pages before filtering/skipping.
-        run_id: Current run identifier.
-    """
+    """Log startup configuration details."""
     years = [item["year"] for item in collection_plan["ranges"]]
 
     logger.info("Starting %s run_id=%s", TOOL_NAME, run_id)
@@ -1123,6 +1132,8 @@ def log_configuration(
     logger.info("Request delay seconds: %s", args.request_delay)
     logger.info("Request jitter seconds: %s", args.request_jitter)
     logger.info("Start page ID: %s", args.start_page_id)
+    logger.info("Diagnosis mode: %s", args.diagnosis_mode)
+    logger.info("Diagnostics directory: %s", args.diagnostics_dir)
     logger.info("Loaded plan years: %s", ", ".join(str(year) for year in years))
     logger.info("Range order: %s", collection_plan.get("range_order"))
     logger.info("Page order within year: %s", collection_plan.get("page_order_within_year"))
@@ -1130,12 +1141,7 @@ def log_configuration(
 
 
 def wait_between_requests(request_delay: float, request_jitter: float) -> None:
-    """Wait between requests according to configured delay and jitter.
-
-    Args:
-        request_delay: Base delay in seconds.
-        request_jitter: Maximum random extra delay in seconds.
-    """
+    """Wait between requests according to configured delay and jitter."""
     delay = request_delay
     if request_jitter > 0:
         delay += random.uniform(0, request_jitter)
@@ -1144,20 +1150,16 @@ def wait_between_requests(request_delay: float, request_jitter: float) -> None:
         time.sleep(delay)
 
 
+def get_effective_diagnostics_dir(args: argparse.Namespace, run_id: str) -> Path:
+    """Return the diagnostics directory for this run."""
+    if args.diagnostics_dir is not None:
+        return args.diagnostics_dir
+
+    return args.output_dir / "diagnostics" / run_id
+
+
 def main() -> int:
-    """Run the batch AO3 list capture workflow and return an exit code.
-
-    This function orchestrates argument parsing, validation, plan loading,
-    capture planning, Selenium browser lifecycle, sequential execution, logging,
-    manifest writing, and exit-code selection.
-
-    Returns:
-        Process exit code:
-        - 0 for success;
-        - 1 if one or more page captures failed;
-        - 2 for configuration errors;
-        - 130 for keyboard interruption.
-    """
+    """Run the batch AO3 list capture workflow and return an exit code."""
     args = parse_args()
     run_id = make_run_id()
     run_start_time = utc_timestamp()
@@ -1167,6 +1169,9 @@ def main() -> int:
     total_pages_in_plan = 0
     planned_attempts = 0
     results: list[dict[str, Any]] = []
+
+    if args.diagnosis_mode and args.diagnostics_dir is None:
+        args.diagnostics_dir = get_effective_diagnostics_dir(args, run_id)
 
     try:
         logger = setup_logging(args.log_file)
@@ -1215,6 +1220,8 @@ def main() -> int:
                 max_retries=args.max_retries,
                 retry_delay=args.retry_delay,
                 logger=logger,
+                diagnosis_mode=args.diagnosis_mode,
+                diagnostics_dir=args.diagnostics_dir,
             )
             results.append(result)
 
@@ -1228,12 +1235,23 @@ def main() -> int:
                 if result["validation"].get("tos_prompt_handled"):
                     logger.info("AO3 Terms of Service prompt accepted")
             else:
-                logger.error(
-                    "FAILED %s status=%s error=%r",
-                    result["page_id"],
-                    result["status"],
-                    result["error"],
-                )
+                diagnosis = result.get("validation", {}).get("diagnosis")
+                if diagnosis:
+                    logger.error(
+                        "FAILED %s status=%s error=%r diagnosis_category=%s diagnostic_json=%s",
+                        result["page_id"],
+                        result["status"],
+                        result["error"],
+                        diagnosis.get("diagnosis_category"),
+                        diagnosis.get("json_path"),
+                    )
+                else:
+                    logger.error(
+                        "FAILED %s status=%s error=%r",
+                        result["page_id"],
+                        result["status"],
+                        result["error"],
+                    )
 
             wait_between_requests(args.request_delay, args.request_jitter)
 

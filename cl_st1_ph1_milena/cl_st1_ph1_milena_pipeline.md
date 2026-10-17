@@ -74,6 +74,16 @@ python capture_ao3_lists.py \
 
 ```shell
 python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3624 \
+  --test-limit 1 \
+  --reprocess \
+  --timeout 60 \
+  --diagnosis-mode
+```
+
+```shell
+python capture_ao3_lists.py \
     --no-test-mode \
     --request-delay 6 \
     --request-jitter 4 \
