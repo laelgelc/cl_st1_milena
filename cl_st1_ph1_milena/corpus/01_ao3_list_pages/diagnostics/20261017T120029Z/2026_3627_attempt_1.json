@@ -1,0 +1,18 @@
+{
+  "diagnosis_category": "cloudflare_or_browser_challenge",
+  "attempt_number": 1,
+  "page_id": "2026_3627",
+  "source_url": "https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3627",
+  "current_url": "https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3627",
+  "title": "archiveofourown.org | 525: SSL handshake failed",
+  "heading": null,
+  "body_preview": "SSL handshake failed Error code 525\nVisit cloudflare.com for more information.\n2026-10-17 12:10:39 UTC\nYou\nBrowser\nWorking\nSão Paulo\nCloudflare\nWorking\narchiveofourown.org\nHost\nError\nWhat happened?\nThe SSL/TLS handshake between Cloudflare and the origin web server failed.\nWhat can I do?\nIf you're a visitor of this website:\nPlease try again in a few minutes.\nIf you're the owner of this website:\nPlease refer to the Error 525 article:\nVerify a valid SSL certificate is installed on your origin server. If none exists, install a free Cloudflare Origin CA certificate.\nCheck Origin Analytics.\nEnsure port 443 is open and your origin supports SNI.\nReview your server's cipher suites for compatibility with Cloudflare.\nCloudflare Ray ID: a4bf338e893bf19f • Your IP: Click to reveal • Performance & security by Cloudflare",
+  "has_list_container": false,
+  "has_work_items": false,
+  "has_tos_prompt": false,
+  "error_type": "TimeoutException",
+  "error": "TimeoutException",
+  "html_path": "corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3627_attempt_1.html",
+  "screenshot_path": "corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3627_attempt_1.png",
+  "json_path": "corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3627_attempt_1.json"
+}
