@@ -226,5 +226,6 @@ __marimo__/
 !cl_st1_preph1_milena/**/*.log
 !cl_st1_ph1_milena/env
 !cl_st1_ph1_milena/**/*.log
+cl_st1_ph1_milena/corpus/01_ao3_list_pages/browser_profiles/
 !cl_st1_ph2_milena/env
 !cl_st1_ph2_milena/**/*.log

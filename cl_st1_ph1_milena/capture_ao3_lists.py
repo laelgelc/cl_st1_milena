@@ -23,6 +23,10 @@ identify whether a timeout was caused by AO3 slowness, Cloudflare/browser
 challenge pages, AO3 error pages, Terms of Service prompts, rate limiting, or
 unexpected page content.
 
+Persistent browser profiles can be enabled with --persistent-browser-profile.
+This allows cookies, local storage, AO3 Terms consent, and browser cache to
+survive across runs.
+
 Example:
     python capture_ao3_lists.py
 
@@ -33,7 +37,10 @@ Resume from a specific page:
     python capture_ao3_lists.py --no-test-mode --start-page-id 2025_0120
 
 Diagnostic run for one page:
-    python capture_ao3_lists.py --start-page-id 2026_3624 --test-limit 1 --reprocess --diagnosis-mode
+    python capture_ao3_lists.py --no-test-mode --start-page-id 2026_3625 --limit-pages 1 --reprocess --diagnosis-mode
+
+Persistent-profile diagnostic run:
+    python capture_ao3_lists.py --no-test-mode --start-page-id 2026_3625 --limit-pages 1 --persistent-browser-profile --diagnosis-mode
 
 The script writes an append-only log file and JSON manifests describing
 run-level metadata and per-page capture status.
@@ -70,12 +77,13 @@ from urllib3.exceptions import ReadTimeoutError
 
 
 TOOL_NAME = "capture_ao3_lists.py"
-TOOL_VERSION = "v2-diagnosis"
+TOOL_VERSION = "v3-persistent-profile"
 
 DEFAULT_COLLECTION_PLAN_PATH = "corpus/00_sources/ao3_list_collection_plan.json"
 DEFAULT_OUTPUT_DIR = "corpus/01_ao3_list_pages"
 DEFAULT_LOG_FILE = "corpus/01_ao3_list_pages/capture_ao3_lists.log"
 DEFAULT_MANIFEST_FILE = "corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json"
+DEFAULT_BROWSER_PROFILE_DIR = "corpus/01_ao3_list_pages/browser_profiles"
 
 DEFAULT_BROWSER = "chrome"
 DEFAULT_HEADLESS = True
@@ -83,16 +91,20 @@ DEFAULT_CHROME_SERVER_FLAGS = True
 
 DEFAULT_TEST_MODE = True
 DEFAULT_TEST_LIMIT = 5
+DEFAULT_LIMIT_PAGES = None
 DEFAULT_WORKERS = 1
 
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_RETRIES = 2
 DEFAULT_RETRY_DELAY_SECONDS = 10
+DEFAULT_TRANSIENT_ERROR_BACKOFF_SECONDS = 300
 
 DEFAULT_REQUEST_DELAY_SECONDS = 3.0
 DEFAULT_REQUEST_JITTER_SECONDS = 1.0
 
 DEFAULT_DIAGNOSIS_MODE = False
+DEFAULT_PERSISTENT_BROWSER_PROFILE = False
+DEFAULT_BROWSER_PROFILE_NAME = "ao3_capture"
 
 AO3_LIST_READY_SELECTOR = "ol.work.index.group li.work"
 AO3_LIST_CONTAINER_SELECTOR = "ol.work.index.group"
@@ -101,6 +113,27 @@ AO3_TOS_PROMPT_SELECTOR = "#tos_prompt"
 AO3_TOS_CHECKBOX_SELECTOR = "#tos_agree"
 AO3_DATA_PROCESSING_CHECKBOX_SELECTOR = "#data_processing_agree"
 AO3_TOS_ACCEPT_BUTTON_SELECTOR = "#accept_tos"
+
+DIAGNOSIS_AO3_LIST_READY = "ao3_list_ready"
+DIAGNOSIS_AO3_LIST_CONTAINER_WITHOUT_ITEMS = "ao3_list_container_without_items"
+DIAGNOSIS_AO3_TOS_PROMPT = "ao3_tos_prompt"
+DIAGNOSIS_AO3_503_SLOW_RESPONSE = "ao3_503_slow_response"
+DIAGNOSIS_AO3_TEMPORARY_ERROR = "ao3_temporary_error"
+DIAGNOSIS_AO3_MAINTENANCE = "ao3_maintenance"
+DIAGNOSIS_RATE_LIMITED = "rate_limited"
+DIAGNOSIS_CLOUDFLARE_525_SSL_HANDSHAKE = "cloudflare_525_ssl_handshake"
+DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE = "cloudflare_or_browser_challenge"
+DIAGNOSIS_AO3_UNEXPECTED_PAGE = "ao3_unexpected_page"
+DIAGNOSIS_UNKNOWN_PAGE_STATE = "unknown_page_state"
+
+TRANSIENT_DIAGNOSIS_CATEGORIES = {
+    DIAGNOSIS_AO3_503_SLOW_RESPONSE,
+    DIAGNOSIS_AO3_TEMPORARY_ERROR,
+    DIAGNOSIS_AO3_MAINTENANCE,
+    DIAGNOSIS_RATE_LIMITED,
+    DIAGNOSIS_CLOUDFLARE_525_SSL_HANDSHAKE,
+    DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE,
+}
 
 EXIT_SUCCESS = 0
 EXIT_CAPTURE_FAILURE = 1
@@ -165,6 +198,34 @@ def parse_args() -> argparse.Namespace:
         help="Run browser with a visible window.",
     )
     parser.add_argument(
+        "--persistent-browser-profile",
+        action="store_true",
+        default=DEFAULT_PERSISTENT_BROWSER_PROFILE,
+        help=(
+            "Use a persistent Selenium browser profile so cookies, local storage, "
+            "AO3 Terms consent, and browser cache survive across runs."
+        ),
+    )
+    parser.add_argument(
+        "--browser-profile-dir",
+        type=Path,
+        default=Path(DEFAULT_BROWSER_PROFILE_DIR),
+        help=(
+            "Base directory for persistent browser profiles. Used only when "
+            "--persistent-browser-profile is provided. "
+            f"Default: {DEFAULT_BROWSER_PROFILE_DIR}"
+        ),
+    )
+    parser.add_argument(
+        "--browser-profile-name",
+        type=str,
+        default=DEFAULT_BROWSER_PROFILE_NAME,
+        help=(
+            "Profile name under --browser-profile-dir. Used only when "
+            "--persistent-browser-profile is provided. Default: ao3_capture"
+        ),
+    )
+    parser.add_argument(
         "--chrome-server-flags",
         dest="chrome_server_flags",
         action="store_true",
@@ -197,6 +258,12 @@ def parse_args() -> argparse.Namespace:
         help=f"Maximum pages to attempt in test mode. Default: {DEFAULT_TEST_LIMIT}",
     )
     parser.add_argument(
+        "--limit-pages",
+        type=int,
+        default=DEFAULT_LIMIT_PAGES,
+        help="Maximum pages to attempt, independent of test mode. Default: no independent limit.",
+    )
+    parser.add_argument(
         "--reprocess",
         action="store_true",
         help="Capture pages even when output HTML files already exist.",
@@ -206,6 +273,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Optional page ID from which to start planning, e.g. 2025_0120.",
+    )
+    parser.add_argument(
+        "--stop-page-id",
+        type=str,
+        default=None,
+        help="Optional page ID at which to stop planning, e.g. 2025_0130. The stop page is included.",
     )
     parser.add_argument(
         "--log-file",
@@ -241,7 +314,16 @@ def parse_args() -> argparse.Namespace:
         "--retry-delay",
         type=float,
         default=DEFAULT_RETRY_DELAY_SECONDS,
-        help=f"Delay in seconds between failed attempts. Default: {DEFAULT_RETRY_DELAY_SECONDS}",
+        help=f"Delay in seconds between ordinary failed attempts. Default: {DEFAULT_RETRY_DELAY_SECONDS}",
+    )
+    parser.add_argument(
+        "--transient-error-backoff",
+        type=float,
+        default=DEFAULT_TRANSIENT_ERROR_BACKOFF_SECONDS,
+        help=(
+            "Longer delay in seconds after recognised AO3/Cloudflare transient "
+            f"failure pages. Default: {DEFAULT_TRANSIENT_ERROR_BACKOFF_SECONDS}"
+        ),
     )
     parser.add_argument(
         "--request-delay",
@@ -317,6 +399,8 @@ def validate_args(args: argparse.Namespace) -> None:
 
     if args.test_limit <= 0:
         raise ConfigurationError("--test-limit must be greater than 0")
+    if args.limit_pages is not None and args.limit_pages <= 0:
+        raise ConfigurationError("--limit-pages must be greater than 0 when provided")
     if args.workers <= 0:
         raise ConfigurationError("--workers must be greater than 0")
     if args.workers != 1:
@@ -327,12 +411,18 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ConfigurationError("--max-retries must be 0 or greater")
     if args.retry_delay < 0:
         raise ConfigurationError("--retry-delay must be 0 or greater")
+    if args.transient_error_backoff < 0:
+        raise ConfigurationError("--transient-error-backoff must be 0 or greater")
     if args.request_delay < 0:
         raise ConfigurationError("--request-delay must be 0 or greater")
     if args.request_jitter < 0:
         raise ConfigurationError("--request-jitter must be 0 or greater")
     if args.start_page_id is not None and not args.start_page_id.strip():
         raise ConfigurationError("--start-page-id must not be empty when provided")
+    if args.stop_page_id is not None and not args.stop_page_id.strip():
+        raise ConfigurationError("--stop-page-id must not be empty when provided")
+    if args.persistent_browser_profile and not args.browser_profile_name.strip():
+        raise ConfigurationError("--browser-profile-name must not be empty when persistent profiles are enabled")
 
     try:
         args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -340,6 +430,8 @@ def validate_args(args: argparse.Namespace) -> None:
         args.manifest_file.parent.mkdir(parents=True, exist_ok=True)
         if args.diagnostics_dir is not None:
             args.diagnostics_dir.mkdir(parents=True, exist_ok=True)
+        if args.persistent_browser_profile:
+            args.browser_profile_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         raise ConfigurationError(f"Could not create required output directories: {exc}") from exc
 
@@ -449,6 +541,16 @@ def make_page_id(year: int, page: int) -> str:
     return f"{year}_{page:04d}"
 
 
+def make_default_validation() -> dict[str, Any]:
+    """Create an empty validation structure."""
+    return {
+        "title": None,
+        "heading": None,
+        "work_items_detected": None,
+        "tos_prompt_handled": False,
+    }
+
+
 def make_skipped_existing_result(page_item: dict[str, Any], output_path: Path) -> dict[str, Any]:
     """Create a manifest result for a page skipped because output already exists."""
     timestamp = utc_timestamp()
@@ -465,12 +567,7 @@ def make_skipped_existing_result(page_item: dict[str, Any], output_path: Path) -
         "duration_seconds": 0.0,
         "start_time": timestamp,
         "end_time": timestamp,
-        "validation": {
-            "title": None,
-            "heading": None,
-            "work_items_detected": None,
-            "tos_prompt_handled": False,
-        },
+        "validation": make_default_validation(),
         "metadata": {
             "reason": "Output HTML file already exists and --reprocess was not provided",
         },
@@ -510,6 +607,14 @@ def expand_collection_plan(collection_plan: dict[str, Any], output_dir: Path) ->
     return pages
 
 
+def find_page_index(all_pages: list[dict[str, Any]], page_id: str) -> int | None:
+    """Find the index of a page ID in an expanded page list."""
+    return next(
+        (index for index, item in enumerate(all_pages) if item["page_id"] == page_id),
+        None,
+    )
+
+
 def plan_captures(
         collection_plan: dict[str, Any],
         output_dir: Path,
@@ -517,21 +622,34 @@ def plan_captures(
         test_limit: int,
         reprocess: bool,
         start_page_id: str | None = None,
+        stop_page_id: str | None = None,
+        limit_pages: int | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
     """Create planned and skipped page capture records."""
     all_pages = expand_collection_plan(collection_plan, output_dir)
     total_pages = len(all_pages)
-    selected_pages = all_pages
+
+    start_index = 0
+    stop_index = len(all_pages) - 1
 
     if start_page_id is not None:
         clean_start_page_id = start_page_id.strip()
-        start_index = next(
-            (index for index, item in enumerate(all_pages) if item["page_id"] == clean_start_page_id),
-            None,
-        )
-        if start_index is None:
+        found_start_index = find_page_index(all_pages, clean_start_page_id)
+        if found_start_index is None:
             raise ConfigurationError(f"--start-page-id was not found in the collection plan: {clean_start_page_id}")
-        selected_pages = all_pages[start_index:]
+        start_index = found_start_index
+
+    if stop_page_id is not None:
+        clean_stop_page_id = stop_page_id.strip()
+        found_stop_index = find_page_index(all_pages, clean_stop_page_id)
+        if found_stop_index is None:
+            raise ConfigurationError(f"--stop-page-id was not found in the collection plan: {clean_stop_page_id}")
+        stop_index = found_stop_index
+
+    if stop_index < start_index:
+        raise ConfigurationError("--stop-page-id occurs before --start-page-id in the collection plan order")
+
+    selected_pages = all_pages[start_index: stop_index + 1]
 
     planned: list[dict[str, Any]] = []
     skipped_existing: list[dict[str, Any]] = []
@@ -548,10 +666,21 @@ def plan_captures(
     if test_mode:
         planned = planned[:test_limit]
 
+    if limit_pages is not None:
+        planned = planned[:limit_pages]
+
     return planned, skipped_existing, total_pages
 
 
-def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeout: int) -> WebDriver:
+def create_driver(
+        browser: str,
+        headless: bool,
+        chrome_server_flags: bool,
+        timeout: int,
+        persistent_browser_profile: bool = False,
+        browser_profile_dir: Path | None = None,
+        browser_profile_name: str = DEFAULT_BROWSER_PROFILE_NAME,
+) -> WebDriver:
     """Create a Selenium WebDriver for the requested browser."""
     try:
         if browser == "chrome":
@@ -567,6 +696,14 @@ def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeo
                 options.add_argument("--no-sandbox")
                 options.add_argument("--disable-dev-shm-usage")
 
+            if persistent_browser_profile:
+                if browser_profile_dir is None:
+                    raise ConfigurationError("browser_profile_dir is required when persistent profiles are enabled")
+                chrome_profile_root = browser_profile_dir / "chrome" / browser_profile_name
+                chrome_profile_root.mkdir(parents=True, exist_ok=True)
+                options.add_argument(f"--user-data-dir={chrome_profile_root}")
+                options.add_argument("--profile-directory=Default")
+
             driver = webdriver.Chrome(options=options)
             driver.set_page_load_timeout(timeout * 4)
             driver.set_script_timeout(timeout)
@@ -577,6 +714,13 @@ def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeo
 
             if headless:
                 options.add_argument("--headless")
+
+            if persistent_browser_profile:
+                if browser_profile_dir is None:
+                    raise ConfigurationError("browser_profile_dir is required when persistent profiles are enabled")
+                firefox_profile_root = browser_profile_dir / "firefox" / browser_profile_name
+                firefox_profile_root.mkdir(parents=True, exist_ok=True)
+                options.profile = str(firefox_profile_root)
 
             driver = webdriver.Firefox(options=options)
             driver.set_page_load_timeout(timeout * 4)
@@ -721,31 +865,41 @@ def get_page_diagnosis_category(
     ).lower()
 
     if has_work_items:
-        return "ao3_list_ready"
+        return DIAGNOSIS_AO3_LIST_READY
     if has_list_container and not has_work_items:
-        return "ao3_list_container_without_items"
+        return DIAGNOSIS_AO3_LIST_CONTAINER_WITHOUT_ITEMS
     if has_tos_prompt:
-        return "ao3_tos_prompt"
-    if "cloudflare" in combined_text:
-        return "cloudflare_or_browser_challenge"
-    if "checking if the site connection is secure" in combined_text:
-        return "cloudflare_or_browser_challenge"
-    if "just a moment" in combined_text and "checking" in combined_text:
-        return "cloudflare_or_browser_challenge"
-    if "retry later" in combined_text:
-        return "ao3_temporary_error"
-    if "temporarily unavailable" in combined_text:
-        return "ao3_temporary_error"
-    if "maintenance" in combined_text:
-        return "ao3_maintenance"
-    if "rate limit" in combined_text:
-        return "rate_limited"
-    if "too many requests" in combined_text:
-        return "rate_limited"
-    if "archive of our own" in combined_text:
-        return "ao3_unexpected_page"
+        return DIAGNOSIS_AO3_TOS_PROMPT
 
-    return "unknown_page_state"
+    if "525: ssl handshake failed" in combined_text:
+        return DIAGNOSIS_CLOUDFLARE_525_SSL_HANDSHAKE
+    if "cloudflare" in combined_text:
+        return DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE
+    if "checking if the site connection is secure" in combined_text:
+        return DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE
+    if "just a moment" in combined_text and "checking" in combined_text:
+        return DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE
+
+    if "error 503" in combined_text and "responding too slowly" in combined_text:
+        return DIAGNOSIS_AO3_503_SLOW_RESPONSE
+    if "page responding too slowly" in combined_text:
+        return DIAGNOSIS_AO3_503_SLOW_RESPONSE
+    if "the page was responding too slowly" in combined_text:
+        return DIAGNOSIS_AO3_503_SLOW_RESPONSE
+    if "retry later" in combined_text:
+        return DIAGNOSIS_AO3_TEMPORARY_ERROR
+    if "temporarily unavailable" in combined_text:
+        return DIAGNOSIS_AO3_TEMPORARY_ERROR
+    if "maintenance" in combined_text:
+        return DIAGNOSIS_AO3_MAINTENANCE
+    if "rate limit" in combined_text:
+        return DIAGNOSIS_RATE_LIMITED
+    if "too many requests" in combined_text:
+        return DIAGNOSIS_RATE_LIMITED
+    if "archive of our own" in combined_text:
+        return DIAGNOSIS_AO3_UNEXPECTED_PAGE
+
+    return DIAGNOSIS_UNKNOWN_PAGE_STATE
 
 
 def collect_page_diagnostics(
@@ -850,16 +1004,6 @@ def collect_page_diagnostics(
     return diagnosis
 
 
-def make_default_validation() -> dict[str, Any]:
-    """Create an empty validation structure."""
-    return {
-        "title": None,
-        "heading": None,
-        "work_items_detected": None,
-        "tos_prompt_handled": False,
-    }
-
-
 def add_diagnosis_to_validation(
         validation: dict[str, Any] | None,
         diagnosis: dict[str, Any] | None,
@@ -901,12 +1045,29 @@ def make_failed_result(
     }
 
 
+def get_retry_delay_for_failure(
+        diagnosis: dict[str, Any] | None,
+        retry_delay: float,
+        transient_error_backoff: float,
+) -> float:
+    """Return an appropriate retry delay for the current failure."""
+    if diagnosis is None:
+        return retry_delay
+
+    diagnosis_category = diagnosis.get("diagnosis_category")
+    if diagnosis_category in TRANSIENT_DIAGNOSIS_CATEGORIES and transient_error_backoff > 0:
+        return transient_error_backoff
+
+    return retry_delay
+
+
 def capture_one_page(
         driver: WebDriver,
         page_item: dict[str, Any],
         timeout: int,
         max_retries: int,
         retry_delay: float,
+        transient_error_backoff: float,
         logger: logging.Logger,
         diagnosis_mode: bool = False,
         diagnostics_dir: Path | None = None,
@@ -985,15 +1146,21 @@ def capture_one_page(
 
         if attempt_number < attempts_allowed:
             retries_used += 1
+            delay = get_retry_delay_for_failure(
+                diagnosis=last_diagnosis,
+                retry_delay=retry_delay,
+                transient_error_backoff=transient_error_backoff,
+            )
             logger.warning(
-                "Retrying %s after failed attempt %s/%s: %s",
+                "Retrying %s after failed attempt %s/%s in %.1f seconds: %s",
                 page_item["page_id"],
                 attempt_number,
                 attempts_allowed,
+                delay,
                 summarise_error(last_error),
             )
-            if retry_delay > 0:
-                time.sleep(retry_delay)
+            if delay > 0:
+                time.sleep(delay)
 
     return make_failed_result(
         page_item=page_item,
@@ -1046,6 +1213,7 @@ def create_manifest(
             "end_time": end_time,
             "test_mode": args.test_mode,
             "test_limit": args.test_limit,
+            "limit_pages": args.limit_pages,
             "reprocess": args.reprocess,
             "workers": args.workers,
             "collection_plan": str(args.collection_plan),
@@ -1057,12 +1225,17 @@ def create_manifest(
                 "browser": args.browser,
                 "headless": args.headless,
                 "chrome_server_flags": args.chrome_server_flags,
+                "persistent_browser_profile": args.persistent_browser_profile,
+                "browser_profile_dir": str(args.browser_profile_dir),
+                "browser_profile_name": args.browser_profile_name,
                 "timeout_seconds": args.timeout,
                 "max_retries": args.max_retries,
                 "retry_delay_seconds": args.retry_delay,
+                "transient_error_backoff_seconds": args.transient_error_backoff,
                 "request_delay_seconds": args.request_delay,
                 "request_jitter_seconds": args.request_jitter,
                 "start_page_id": args.start_page_id,
+                "stop_page_id": args.stop_page_id,
                 "diagnosis_mode": args.diagnosis_mode,
                 "diagnostics_dir": str(args.diagnostics_dir) if args.diagnostics_dir is not None else None,
             },
@@ -1123,15 +1296,21 @@ def log_configuration(
     logger.info("Manifest file: %s", args.manifest_file)
     logger.info("Browser: %s; headless=%s", args.browser, args.headless)
     logger.info("Chrome server flags: %s", args.chrome_server_flags)
+    logger.info("Persistent browser profile: %s", args.persistent_browser_profile)
+    logger.info("Browser profile directory: %s", args.browser_profile_dir)
+    logger.info("Browser profile name: %s", args.browser_profile_name)
     logger.info("Test mode: %s; test_limit=%s", args.test_mode, args.test_limit)
+    logger.info("Limit pages: %s", args.limit_pages)
     logger.info("Reprocess: %s", args.reprocess)
     logger.info("Workers: %s", args.workers)
     logger.info("Timeout seconds: %s", args.timeout)
     logger.info("Max retries: %s", args.max_retries)
     logger.info("Retry delay seconds: %s", args.retry_delay)
+    logger.info("Transient error backoff seconds: %s", args.transient_error_backoff)
     logger.info("Request delay seconds: %s", args.request_delay)
     logger.info("Request jitter seconds: %s", args.request_jitter)
     logger.info("Start page ID: %s", args.start_page_id)
+    logger.info("Stop page ID: %s", args.stop_page_id)
     logger.info("Diagnosis mode: %s", args.diagnosis_mode)
     logger.info("Diagnostics directory: %s", args.diagnostics_dir)
     logger.info("Loaded plan years: %s", ", ".join(str(year) for year in years))
@@ -1185,6 +1364,8 @@ def main() -> int:
             test_limit=args.test_limit,
             reprocess=args.reprocess,
             start_page_id=args.start_page_id,
+            stop_page_id=args.stop_page_id,
+            limit_pages=args.limit_pages,
         )
         planned_attempts = len(planned)
         results.extend(skipped_existing)
@@ -1208,6 +1389,9 @@ def main() -> int:
                 headless=args.headless,
                 chrome_server_flags=args.chrome_server_flags,
                 timeout=args.timeout,
+                persistent_browser_profile=args.persistent_browser_profile,
+                browser_profile_dir=args.browser_profile_dir,
+                browser_profile_name=args.browser_profile_name,
             )
 
         for item in planned:
@@ -1219,6 +1403,7 @@ def main() -> int:
                 timeout=args.timeout,
                 max_retries=args.max_retries,
                 retry_delay=args.retry_delay,
+                transient_error_backoff=args.transient_error_backoff,
                 logger=logger,
                 diagnosis_mode=args.diagnosis_mode,
                 diagnostics_dir=args.diagnostics_dir,
