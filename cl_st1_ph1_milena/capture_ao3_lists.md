@@ -9,11 +9,9 @@
 This programme implements the **Lists Collection** subphase of Phase 1. It does **not** extract metadata and does **not** extract text. Its sole data-collection responsibility is to capture and save AO3 list pages as HTML files in a reproducible, resumable, auditable way.
 
 The programme reads a fixed JSON collection plan:
-
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
-
 The collection plan defines:
 
 - the AO3 base URL;
@@ -24,36 +22,28 @@ The collection plan defines:
 - the planned capture order.
 
 For Phase 1, the planned capture range is:
-
 ```text
 2026 → 2025 → 2024 → 2023 → 2022 → 2021 → 2020 → 2019
 ```
-
 Years are captured in **descending order** because the most recent AO3 lists are more volatile. AO3 users are more active in recent years, so list ranges for 2026 and 2025 are more susceptible to change. Capturing recent years first reduces the risk that the documented page ranges become stale before acquisition.
 
 Within each year, pages are captured in ascending page order:
-
 ```text
-2026_0001 → 2026_0002 → ... → 2026_3793
-2025_0001 → 2025_0002 → ... → 2025_3132
+2026_0001 → 2026_0002 → ...
+2025_0001 → 2025_0002 → ...
 ...
-2019_0001 → ... → 2019_0531
+2019_0001 → ...
 ```
-
 The programme saves each list page as:
-
 ```text
 corpus/01_ao3_list_pages/<year>/<year>_<page:04d>.html
 ```
-
 For example:
-
 ```text
 corpus/01_ao3_list_pages/2026/2026_0001.html
 corpus/01_ao3_list_pages/2025/2025_0001.html
 corpus/01_ao3_list_pages/2019/2019_0531.html
 ```
-
 The programme uses Selenium to run a real browser in headless mode. Chrome is the default browser, and Firefox is supported through a command-line option.
 
 The programme must handle AO3’s Terms of Service consent prompt when it appears, wait for list-page content to be available, validate that the expected AO3 list structure is present, and then save the rendered HTML.
@@ -63,6 +53,14 @@ The programme must include `view_adult=true` in generated AO3 list URLs. AO3 may
 The programme must be safe to re-run: existing HTML files are skipped by default unless `--reprocess` is provided.
 
 The programme writes an append-only log file and JSON manifests describing run-level metadata and page-level capture status.
+
+The programme must also support a **diagnosis mode** for investigating failed page captures. Diagnosis mode saves the rendered failure page, a screenshot, and a structured JSON summary for each failed attempt. This is required because AO3 may return valid HTML error pages instead of raising browser-level errors. Examples observed during development include:
+
+- AO3 `Error 503` pages titled `Page Responding Too Slowly | Archive of Our Own`;
+- Cloudflare or edge-layer pages such as `525: SSL handshake failed`;
+- pages where the URL is valid but expected AO3 list selectors are absent.
+
+These conditions must be classified explicitly where possible instead of being reported only as generic Selenium timeouts.
 
 ---
 
@@ -100,11 +98,18 @@ The programme must implement the following behaviours:
 - Reprocess existing HTML files only when `--reprocess` is provided.
 - Use test mode by default, limiting capture to 5 planned pages.
 - Support starting from a specific page identifier using `--start-page-id`.
+- Support an optional page limit independent of test mode using `--limit-pages`.
+- Support an optional stop page identifier using `--stop-page-id`.
 - Continue processing remaining pages if one page fails.
 - Treat ordinary Selenium, browser, local WebDriver communication, page-load timeout, validation, and file-write failures as page-level failures rather than full-run crashes.
 - Retry failed page captures according to the configured retry policy.
+- Detect and classify known AO3 and Cloudflare failure pages when diagnosis mode is enabled.
+- Treat AO3 `Error 503` / `Page Responding Too Slowly` pages as a distinct retryable page-level failure condition.
+- Treat Cloudflare or edge-layer failures such as `525: SSL handshake failed` as a distinct retryable page-level failure condition.
+- Optionally save diagnostic HTML, screenshot, and JSON files for each failed attempt.
 - Apply a configurable delay between page captures.
 - Optionally apply random jitter to the inter-page delay.
+- Apply longer backoff delays for AO3/Cloudflare transient or protective responses when such responses are detected.
 - Record progress and errors in an append-only log file.
 - Produce compact and meaningful error summaries for logs and manifests.
 - Avoid reducing Selenium errors to unhelpful stack-frame fragments such as `#17 ... <unknown>`.
@@ -124,11 +129,9 @@ The programme must implement the following behaviours:
 #### Collection plan file
 
 Default path:
-
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
-
 The collection plan is a JSON file defining the Phase 1 AO3 list capture task.
 
 The file is expected to contain:
@@ -141,15 +144,18 @@ The file is expected to contain:
 - expected works count for each year.
 
 #### Recommended collection plan structure
-
 ```json
 {
   "collection_name": "ao3_original_work_english_lists_2026_2019",
-  "created_on": "2026-10-12",
+  "collection_phase": "Phase 1 - Data Collection",
+  "collection_subphase": "Lists Collection",
+  "created_on": "2026-10-13",
+  "source_note": "AO3 list URL ranges documented as of 13/10/2026.",
   "base_url": "https://archiveofourown.org/works",
   "range_order": "descending_year",
   "page_order_within_year": "ascending_page",
   "output_file_pattern": "{year}_{page:04d}.html",
+  "description": "Capture AO3 Works list pages for English works tagged as Original Work, excluding crossovers, grouped by Date Updated yearly ranges from 2026 down to 2019.",
   "filters": {
     "sort_column": "revised_at",
     "other_tag_names": "",
@@ -168,23 +174,23 @@ The file is expected to contain:
       "year": 2026,
       "date_from": "2026-01-01",
       "date_to": "2026-12-31",
-      "expected_works": 75852,
+      "expected_works": 76105,
       "page_from": 1,
-      "page_to": 3793
+      "page_to": 3806
     },
     {
       "year": 2025,
       "date_from": "2025-01-01",
       "date_to": "2025-12-31",
-      "expected_works": 62624,
+      "expected_works": 62614,
       "page_from": 1,
-      "page_to": 3132
+      "page_to": 3131
     },
     {
       "year": 2024,
       "date_from": "2024-01-01",
       "date_to": "2024-12-31",
-      "expected_works": 45720,
+      "expected_works": 45717,
       "page_from": 1,
       "page_to": 2286
     },
@@ -192,7 +198,7 @@ The file is expected to contain:
       "year": 2023,
       "date_from": "2023-01-01",
       "date_to": "2023-12-31",
-      "expected_works": 37817,
+      "expected_works": 37815,
       "page_from": 1,
       "page_to": 1891
     },
@@ -200,7 +206,7 @@ The file is expected to contain:
       "year": 2022,
       "date_from": "2022-01-01",
       "date_to": "2022-12-31",
-      "expected_works": 29197,
+      "expected_works": 29195,
       "page_from": 1,
       "page_to": 1460
     },
@@ -231,7 +237,6 @@ The file is expected to contain:
   ]
 }
 ```
-
 #### Query parameter mapping
 
 The programme must translate the plan’s `filters` object into AO3 query parameters.
@@ -257,11 +262,9 @@ For the filters above, the generated URL must include:
 | page number          | `page`                            |
 
 Example generated URL:
-
 ```text
 https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2025-01-01&work_search%5Bdate_to%5D=2025-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 ```
-
 The exact encoding may differ as long as the resulting URL is semantically equivalent and valid.
 
 ---
@@ -271,17 +274,14 @@ The exact encoding may differ as long as the resulting URL is semantically equiv
 #### HTML output directory
 
 Default path:
-
 ```text
 corpus/01_ao3_list_pages/
 ```
-
 The programme must create this directory if it does not already exist.
 
 #### Per-year output directories
 
 The programme must save pages under year-specific subdirectories:
-
 ```text
 corpus/01_ao3_list_pages/2026/
 corpus/01_ao3_list_pages/2025/
@@ -292,23 +292,18 @@ corpus/01_ao3_list_pages/2021/
 corpus/01_ao3_list_pages/2020/
 corpus/01_ao3_list_pages/2019/
 ```
-
 #### Per-page HTML output
 
 Each page must be saved as:
-
 ```text
 <output_dir>/<year>/<year>_<page:04d>.html
 ```
-
 Examples:
-
 ```text
 corpus/01_ao3_list_pages/2026/2026_0001.html
-corpus/01_ao3_list_pages/2026/2026_3793.html
+corpus/01_ao3_list_pages/2026/2026_3806.html
 corpus/01_ao3_list_pages/2019/2019_0531.html
 ```
-
 #### No text output
 
 The programme must **not** save `.txt` versions of the pages.
@@ -318,11 +313,9 @@ Text extraction is outside the scope of `capture_ao3_lists.py`.
 #### Log file
 
 Default path:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
-
 The log file must be:
 
 - plain text;
@@ -337,11 +330,9 @@ The programme must write two manifest files.
 ##### Latest manifest
 
 Default path:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
-
 This file is overwritten at the end of each run.
 
 ##### Per-run manifest
@@ -349,27 +340,58 @@ This file is overwritten at the end of each run.
 A timestamped copy must also be written using the run ID.
 
 Filename pattern:
-
 ```text
 capture_ao3_lists_manifest_<run_id>.json
 ```
-
 Example:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261012T143012Z.json
 ```
+#### Diagnostic output directory
+
+When `--diagnosis-mode` is enabled, the programme must write diagnostic artifacts for failed capture attempts.
+
+Default path:
+```text
+corpus/01_ao3_list_pages/diagnostics/<run_id>/
+```
+Each failed attempt should produce up to three files:
+```text
+<page_id>_attempt_<n>.html
+<page_id>_attempt_<n>.png
+<page_id>_attempt_<n>.json
+```
+Example:
+```text
+corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3625_attempt_1.html
+corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3625_attempt_1.png
+corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3625_attempt_1.json
+```
+The diagnostic JSON should record:
+
+- diagnosis category;
+- attempt number;
+- page ID;
+- source URL;
+- current browser URL;
+- page title;
+- main heading;
+- body text preview;
+- whether the AO3 list container was found;
+- whether work items were found;
+- whether the TOS prompt was visible;
+- exception type;
+- compact error summary;
+- paths to saved diagnostic artifacts.
 
 ---
 
 ## 4. Command-line Interface
 
 ### 4.1 Default usage
-
 ```bash
 python capture_ao3_lists.py
 ```
-
 Default behaviour:
 
 - collection plan: `corpus/00_sources/ao3_list_collection_plan.json`
@@ -381,6 +403,7 @@ Default behaviour:
 - Chrome server flags: enabled
 - test mode: enabled
 - test limit: 5 pages
+- independent page limit: disabled
 - reprocess: disabled
 - existing `.html` files are skipped
 - workers: 1 / sequential processing
@@ -390,7 +413,9 @@ Default behaviour:
 - request delay: enabled
 - AO3 Terms of Service prompt handling: enabled
 - generated list URLs include `view_adult=true`
+- diagnosis mode: disabled
 - no start page filter
+- no stop page filter
 
 ---
 
@@ -405,17 +430,13 @@ However, all important paths and processing controls must be configurable.
 ### 4.3 Optional arguments
 
 #### Collection plan path
-
 ```bash
 --collection-plan PATH
 ```
-
 Default:
-
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
-
 Description:
 
 Path to the JSON collection plan file.
@@ -423,17 +444,13 @@ Path to the JSON collection plan file.
 ---
 
 #### Output directory
-
 ```bash
 --output-dir PATH
 ```
-
 Default:
-
 ```text
 corpus/01_ao3_list_pages/
 ```
-
 Description:
 
 Directory where captured AO3 list HTML files will be saved.
@@ -441,18 +458,14 @@ Directory where captured AO3 list HTML files will be saved.
 ---
 
 #### Browser
-
 ```bash
 --browser chrome
 --browser firefox
 ```
-
 Default:
-
 ```text
 chrome
 ```
-
 Description:
 
 Browser to use for Selenium capture.
@@ -465,18 +478,14 @@ Supported values:
 ---
 
 #### Headless mode
-
 ```bash
 --headless
 --no-headless
 ```
-
 Default:
-
 ```text
 --headless
 ```
-
 Description:
 
 Run the browser in headless mode by default. This is required for production use on EC2.
@@ -484,44 +493,34 @@ Run the browser in headless mode by default. This is required for production use
 ---
 
 #### Chrome server flags
-
 ```bash
 --chrome-server-flags
 --no-chrome-server-flags
 ```
-
 Default:
-
 ```text
 --chrome-server-flags
 ```
-
 Description:
 
 When using Chrome, include options suitable for headless Linux/EC2 execution, such as:
-
 ```text
 --no-sandbox
 --disable-dev-shm-usage
 --disable-gpu
 --window-size=1920,1080
 ```
-
 ---
 
 #### Test mode
-
 ```bash
 --test-mode
 --no-test-mode
 ```
-
 Default:
-
 ```text
 --test-mode
 ```
-
 Description:
 
 When test mode is enabled, the programme processes only a limited number of planned pages.
@@ -529,43 +528,64 @@ When test mode is enabled, the programme processes only a limited number of plan
 ---
 
 #### Test limit
-
 ```bash
 --test-limit N
 ```
-
 Default:
-
 ```text
 5
 ```
-
 Description:
 
 Maximum number of pages to attempt when test mode is enabled.
 
 Must be a positive integer.
 
-Example:
+Important:
 
+`--test-limit` applies only when test mode is enabled. If `--no-test-mode` is used, `--test-limit` is ignored. For a page limit that applies in both test and non-test mode, use `--limit-pages`.
+
+Example:
 ```bash
 python capture_ao3_lists.py --test-limit 10
 ```
+---
 
+#### Independent page limit
+```bash
+--limit-pages N
+```
+Default:
+```text
+None
+```
+Description:
+
+Maximum number of pages to attempt after start/stop filtering and existing-file skipping, independent of test mode.
+
+This option is intended for diagnostic and controlled backfill runs where the user wants to process a fixed number of pages even when `--no-test-mode` is active.
+
+Must be a positive integer when provided.
+
+Example:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --limit-pages 1 \
+  --reprocess \
+  --diagnosis-mode
+```
 ---
 
 #### Reprocess existing pages
-
 ```bash
 --reprocess
 ```
-
 Default:
-
 ```text
 False
 ```
-
 Description:
 
 When omitted, the programme skips any page whose output `.html` file already exists.
@@ -573,69 +593,92 @@ When omitted, the programme skips any page whose output `.html` file already exi
 When provided, the programme captures the page again and overwrites the existing output file.
 
 Example:
-
 ```bash
 python capture_ao3_lists.py --reprocess
 ```
-
 ---
 
 #### Start page ID
-
 ```bash
 --start-page-id PAGE_ID
 ```
-
 Default:
-
 ```text
 None
 ```
-
 Description:
 
 Optional page identifier from which to start planning captures.
 
 The page ID format is:
-
 ```text
 <year>_<page:04d>
 ```
-
 Examples:
-
 ```text
 2026_0001
 2025_0120
 2019_0531
 ```
-
 When `--start-page-id` is provided, the programme must preserve the collection plan order but ignore all pages that occur before the specified page ID. The specified page itself must be included in the planning step.
 
 Example:
-
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
-
 If the requested page ID is not found in the planned page list, the programme must fail fast with a configuration error.
 
 ---
 
-#### Log file
+#### Stop page ID
+```bash
+--stop-page-id PAGE_ID
+```
+Default:
+```text
+None
+```
+Description:
 
+Optional page identifier at which to stop planning captures.
+
+The page ID format is:
+```text
+<year>_<page:04d>
+```
+The stop page itself should be included in the planning step.
+
+Examples:
+```text
+2026_3630
+2025_0120
+2019_0531
+```
+If both `--start-page-id` and `--stop-page-id` are provided, the programme should include pages from the start page through the stop page, preserving the collection plan order.
+
+If the requested stop page ID is not found in the planned page list, or if it occurs before the start page, the programme must fail fast with a configuration error.
+
+Example:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3624 \
+  --stop-page-id 2026_3630 \
+  --reprocess \
+  --diagnosis-mode
+```
+---
+
+#### Log file
 ```bash
 --log-file PATH
 ```
-
 Default:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
-
 Description:
 
 Path to the append-only log file.
@@ -643,17 +686,13 @@ Path to the append-only log file.
 ---
 
 #### Manifest file
-
 ```bash
 --manifest-file PATH
 ```
-
 Default:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
-
 Description:
 
 Path to the latest manifest file. The per-run timestamped manifest should be written next to this file.
@@ -661,17 +700,13 @@ Path to the latest manifest file. The per-run timestamped manifest should be wri
 ---
 
 #### Workers
-
 ```bash
 --workers N
 ```
-
 Default:
-
 ```text
 1
 ```
-
 Description:
 
 Number of worker processes.
@@ -683,17 +718,13 @@ Must be a positive integer.
 ---
 
 #### Timeout
-
 ```bash
 --timeout SECONDS
 ```
-
 Default suggestion:
-
 ```text
 30
 ```
-
 Description:
 
 Maximum allowed time, in seconds, for AO3 page readiness checks and related browser interactions.
@@ -714,17 +745,13 @@ If a page load, WebDriver command, or readiness check times out:
 ---
 
 #### Maximum retries
-
 ```bash
 --max-retries N
 ```
-
 Default suggestion:
-
 ```text
 2
 ```
-
 Description:
 
 Number of retry attempts after a failed capture.
@@ -740,209 +767,288 @@ Must be zero or a positive integer.
 ---
 
 #### Retry delay
-
 ```bash
 --retry-delay SECONDS
 ```
-
 Default suggestion:
-
 ```text
 10
 ```
-
 Description:
 
-Delay between failed capture attempts.
+Delay between failed capture attempts for ordinary retryable failures.
 
-Must be zero or a positive integer.
+Must be zero or a positive number.
+
+---
+
+#### Transient error backoff
+```bash
+--transient-error-backoff SECONDS
+```
+Default suggestion:
+```text
+300
+```
+Description:
+
+Longer delay to apply after known transient AO3 or Cloudflare failure pages are detected.
+
+This delay is intended for cases where immediate retry is unlikely to help, such as:
+
+- AO3 `Error 503`;
+- AO3 `Page Responding Too Slowly`;
+- Cloudflare `525: SSL handshake failed`;
+- suspected rate limiting or protective responses.
+
+For example, if AO3 returns `Page Responding Too Slowly`, the programme should wait for `--transient-error-backoff` seconds before retrying, rather than using the shorter ordinary `--retry-delay`.
+
+A value of `0` disables special backoff and falls back to the normal retry delay.
 
 ---
 
 #### Request delay
-
 ```bash
 --request-delay SECONDS
 ```
-
 Default suggestion:
-
 ```text
 3
 ```
-
 Description:
 
 Delay after each attempted page capture before the next page is requested.
 
 This is a politeness control to avoid placing unnecessary load on AO3.
 
+For production runs, especially when AO3 starts returning 503 or Cloudflare responses, more conservative values such as 30–120 seconds may be appropriate.
+
 ---
 
 #### Request jitter
-
 ```bash
 --request-jitter SECONDS
 ```
-
 Default suggestion:
-
 ```text
 1
 ```
-
 Description:
 
 Maximum random additional delay added to `--request-delay`.
 
 For example, with:
-
 ```bash
 --request-delay 3 --request-jitter 1
 ```
-
 the programme waits between 3 and 4 seconds between page requests.
+
+---
+
+#### Diagnosis mode
+```bash
+--diagnosis-mode
+```
+Default:
+```text
+False
+```
+Description:
+
+Enable diagnostic artifact capture for failed page attempts.
+
+When enabled, the programme should save:
+
+- rendered HTML of the failed page state;
+- screenshot of the failed page state;
+- structured JSON summary of the failed page state.
+
+Diagnosis mode is useful for distinguishing:
+
+- selector mismatches;
+- AO3 Terms of Service prompt issues;
+- AO3 error pages;
+- AO3 `Error 503` / `Page Responding Too Slowly`;
+- Cloudflare or edge-layer errors;
+- empty or unexpected pages.
+
+---
+
+#### Diagnostics directory
+```bash
+--diagnostics-dir PATH
+```
+Default:
+```text
+<output-dir>/diagnostics/<run-id>/
+```
+Description:
+
+Directory where diagnostic artifacts are saved when `--diagnosis-mode` is enabled.
 
 ---
 
 ## 4.4 Example commands
 
 ### Small default test run
-
 ```bash
 python capture_ao3_lists.py
 ```
-
 Captures up to 5 missing pages using the default collection plan.
 
 ---
 
 ### Test run with 10 pages
-
 ```bash
 python capture_ao3_lists.py --test-limit 10
 ```
-
 ---
 
 ### Test run from a specific page ID
-
 ```bash
 python capture_ao3_lists.py \
   --test-limit 10 \
   --start-page-id 2025_0120
 ```
-
 ---
 
 ### Full production run
-
 ```bash
 python capture_ao3_lists.py --no-test-mode
 ```
-
 ---
 
 ### Full production run from a specific page ID
-
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
-
 ---
 
 ### Full production run with explicit paths
-
 ```bash
 python capture_ao3_lists.py \
   --collection-plan corpus/00_sources/ao3_list_collection_plan.json \
   --output-dir corpus/01_ao3_list_pages \
   --no-test-mode
 ```
-
 ---
 
 ### Full production run with Firefox
-
 ```bash
 python capture_ao3_lists.py \
   --browser firefox \
   --no-test-mode
 ```
-
 ---
 
 ### Re-capture pages even if files already exist
-
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --reprocess
 ```
-
 ---
 
 ### More conservative production run
-
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
-  --request-delay 5 \
-  --request-jitter 2 \
+  --request-delay 60 \
+  --request-jitter 30 \
   --max-retries 3 \
-  --retry-delay 20
+  --retry-delay 30 \
+  --transient-error-backoff 600 \
+  --timeout 90
 ```
+---
 
+### Diagnostic run for a single page
+
+Use `--limit-pages`, not `--test-limit`, when `--no-test-mode` is active.
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --limit-pages 1 \
+  --reprocess \
+  --timeout 60 \
+  --diagnosis-mode
+```
+---
+
+### Diagnostic run for a small page range
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3624 \
+  --stop-page-id 2026_3630 \
+  --reprocess \
+  --timeout 60 \
+  --diagnosis-mode
+```
+---
+
+### Conservative retry after AO3 503 or Cloudflare errors
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --request-delay 60 \
+  --request-jitter 30 \
+  --max-retries 3 \
+  --retry-delay 30 \
+  --transient-error-backoff 600 \
+  --timeout 90 \
+  --diagnosis-mode
+```
 ---
 
 ### Resume after transient AO3 or WebDriver instability
 
-If a long production run encounters repeated transient page-load or local WebDriver timeouts, resume from the first missing or failed page with slower request pacing and more retries:
-
+If a long production run encounters repeated transient page-load, AO3 503, Cloudflare, or local WebDriver timeouts, resume from the first missing or failed page with slower request pacing and more retries:
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_3050 \
-  --request-delay 6 \
-  --request-jitter 4 \
+  --request-delay 60 \
+  --request-jitter 30 \
   --max-retries 4 \
-  --retry-delay 20 \
-  --timeout 45
+  --retry-delay 30 \
+  --transient-error-backoff 600 \
+  --timeout 90 \
+  --diagnosis-mode
 ```
-
 Existing successfully captured pages will still be skipped unless `--reprocess` is provided.
 
 ---
 
 ### EC2 full run with `nohup`
-
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
     --no-test-mode \
     --browser chrome \
-    --request-delay 3 \
-    --request-jitter 1 \
+    --request-delay 60 \
+    --request-jitter 30 \
+    --transient-error-backoff 600 \
 > process_output.log 2>&1 &
 ```
-
 ---
 
 ### EC2 full run from a specific page ID
-
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
     --no-test-mode \
     --browser chrome \
     --start-page-id 2025_0120 \
-    --request-delay 3 \
-    --request-jitter 1 \
+    --request-delay 60 \
+    --request-jitter 30 \
+    --transient-error-backoff 600 \
 > process_output.log 2>&1 &
 ```
-
 ---
 
 ## 5. Argument Validation
@@ -967,16 +1073,22 @@ The programme must fail fast with a clear message if:
 - an output directory cannot be created;
 - `--browser` is not one of the supported browsers;
 - `--test-limit` is less than or equal to zero;
+- `--limit-pages` is provided and is less than or equal to zero;
 - `--workers` is less than or equal to zero;
 - `--workers` is not `1` in the current sequential implementation;
 - `--timeout` is less than or equal to zero;
 - `--max-retries` is negative;
 - `--retry-delay` is negative;
+- `--transient-error-backoff` is negative;
 - `--request-delay` is negative;
 - `--request-jitter` is negative;
 - `--start-page-id` is provided but empty;
+- `--stop-page-id` is provided but empty;
 - `--start-page-id` is provided but not found in the planned page list;
-- Selenium cannot initialise the selected browser.
+- `--stop-page-id` is provided but not found in the planned page list;
+- `--stop-page-id` occurs before `--start-page-id` in plan order;
+- Selenium cannot initialise the selected browser;
+- `--diagnostics-dir` is provided but cannot be created.
 
 A validation error should:
 
@@ -993,12 +1105,10 @@ A validation error should:
 The programme requires Python, Selenium, and urllib3.
 
 Suggested Python dependencies:
-
 ```text
 selenium
 urllib3
 ```
-
 `urllib3` is used so that local Selenium/WebDriver read timeouts can be caught explicitly and treated as retryable page-level failures.
 
 The programme otherwise uses Python standard-library modules where possible.
@@ -1034,7 +1144,6 @@ Selenium Manager may be used automatically by Selenium to locate, download, and 
 The programme must be portable to an EC2 instance.
 
 For Chrome on EC2, the following browser options should be used by default in headless mode:
-
 ```text
 --headless=new
 --no-sandbox
@@ -1042,18 +1151,15 @@ For Chrome on EC2, the following browser options should be used by default in he
 --disable-gpu
 --window-size=1920,1080
 ```
-
 For Firefox on EC2, the browser should run with:
-
 ```text
 --headless
 ```
-
 ### Secrets and credentials
 
 This programme does not require API keys or secret credentials.
 
-For this first implementation, AO3 cookies are not required. AO3 Terms of Service consent should be handled through Selenium interaction.
+For this implementation, AO3 login cookies are not required. AO3 Terms of Service consent should be handled through Selenium interaction.
 
 ---
 
@@ -1069,7 +1175,7 @@ The programme must follow this workflow:
     - Set up logging.
     - Validate arguments.
     - Load and validate the collection plan.
-    - Ensure output, log, and manifest directories exist.
+    - Ensure output, log, manifest, and optional diagnostics directories exist.
 
 2. **Planning**
     - Build the ordered list of planned pages from the collection plan.
@@ -1083,6 +1189,11 @@ The programme must follow this workflow:
         - ignore all pages before it;
         - include the specified page and all following pages;
         - fail fast if the specified page ID is not found.
+    - If `--stop-page-id` is provided:
+        - locate the specified page ID;
+        - ignore all pages after it;
+        - include the specified page;
+        - fail fast if the specified page ID is not found or occurs before the start page.
     - For each selected page:
         - compute output path;
         - decide whether to skip or attempt capture.
@@ -1092,6 +1203,8 @@ The programme must follow this workflow:
         - plan the page for capture.
     - If test mode is enabled:
         - limit attempted captures to `--test-limit`.
+    - If `--limit-pages` is provided:
+        - limit attempted captures to `--limit-pages`, independent of test mode.
 
 3. **Browser setup**
     - Create one Selenium WebDriver instance for the run.
@@ -1111,7 +1224,10 @@ The programme must follow this workflow:
         - save HTML;
         - record page-level result.
     - If a page capture fails:
+        - collect diagnostic artifacts if diagnosis mode is enabled;
+        - classify known AO3/Cloudflare failure pages when possible;
         - retry according to `--max-retries`;
+        - apply special transient-error backoff for known AO3/Cloudflare transient responses;
         - if all attempts fail, mark the page as failed;
         - record a compact error summary;
         - continue to the next page.
@@ -1120,7 +1236,7 @@ The programme must follow this workflow:
 5. **End-of-run summary**
     - Count:
         - total plan pages;
-        - selected pages after start-page filtering;
+        - selected pages after start/stop filtering;
         - skipped existing pages;
         - attempted pages;
         - successful captures;
@@ -1153,12 +1269,10 @@ Responsible for:
 - returning a configuration object or namespace.
 
 Suggested function:
-
 ```python
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for the AO3 list capture programme."""
 ```
-
 #### Logging setup
 
 Responsible for:
@@ -1168,12 +1282,10 @@ Responsible for:
 - configuring console logging.
 
 Suggested function:
-
 ```python
 def setup_logging(log_file: Path) -> logging.Logger:
     """Configure append-only file logging and console logging."""
 ```
-
 #### Argument validation
 
 Responsible for:
@@ -1182,15 +1294,13 @@ Responsible for:
 - checking numeric arguments;
 - checking supported browser selection;
 - checking worker count;
-- checking start page ID syntax.
+- checking start and stop page IDs.
 
 Suggested function:
-
 ```python
 def validate_args(args: argparse.Namespace) -> None:
     """Validate command-line arguments before processing."""
 ```
-
 #### Collection plan loading
 
 Responsible for:
@@ -1201,12 +1311,10 @@ Responsible for:
 - preserving range order.
 
 Suggested function:
-
 ```python
 def load_collection_plan(plan_path: Path) -> dict:
     """Load and validate the AO3 list collection plan."""
 ```
-
 #### URL generation
 
 Responsible for:
@@ -1218,12 +1326,10 @@ Responsible for:
 - returning a valid URL string.
 
 Suggested function:
-
 ```python
 def build_ao3_list_url(base_url: str, filters: dict, range_item: dict, page: int) -> str:
     """Build a canonical AO3 list URL from plan filters, year range, and page number."""
 ```
-
 #### Planning
 
 Responsible for:
@@ -1231,11 +1337,12 @@ Responsible for:
 - expanding year ranges into page records;
 - creating page IDs;
 - applying `--start-page-id`;
+- applying `--stop-page-id`;
 - checking existing files;
-- applying test limit.
+- applying test limit;
+- applying independent page limit.
 
 Suggested function:
-
 ```python
 def plan_captures(
     collection_plan: dict,
@@ -1243,11 +1350,12 @@ def plan_captures(
     test_mode: bool,
     test_limit: int,
     reprocess: bool,
-    start_page_id: str | None = None
+    start_page_id: str | None = None,
+    stop_page_id: str | None = None,
+    limit_pages: int | None = None
 ) -> tuple[list[dict], list[dict], int]:
     """Create planned and skipped page capture records."""
 ```
-
 #### Browser creation
 
 Responsible for:
@@ -1260,12 +1368,10 @@ Responsible for:
 - setting a script timeout derived from `--timeout`.
 
 Suggested function:
-
 ```python
 def create_driver(browser: str, headless: bool, chrome_server_flags: bool, timeout: int) -> webdriver.Remote:
     """Create a Selenium WebDriver for the requested browser."""
 ```
-
 #### AO3 consent handling
 
 Responsible for:
@@ -1276,12 +1382,10 @@ Responsible for:
 - waiting for the prompt to disappear.
 
 Suggested function:
-
 ```python
 def accept_ao3_tos_if_present(driver: webdriver.Remote, timeout: int) -> bool:
     """Accept the AO3 Terms of Service prompt if it is present."""
 ```
-
 Return value:
 
 - `True` if a prompt was detected and accepted;
@@ -1297,21 +1401,16 @@ Responsible for:
 - waiting for list content.
 
 Suggested function:
-
 ```python
 def wait_for_ao3_list_page(driver: webdriver.Remote, timeout: int) -> dict:
     """Wait for an AO3 list page to be ready and return basic validation metadata."""
 ```
-
 This function should wait for:
-
 ```text
 ol.work.index.group
 ol.work.index.group li.work
 ```
-
 It should return validation metadata such as:
-
 ```python
 {
     "title": "...",
@@ -1320,7 +1419,74 @@ It should return validation metadata such as:
     "tos_prompt_handled": True
 }
 ```
+#### Diagnosis and page-state classification
 
+Responsible for:
+
+- saving diagnostic HTML for failed attempts;
+- saving screenshots for failed attempts;
+- saving diagnostic JSON summaries;
+- detecting common AO3 and Cloudflare failure pages;
+- classifying failure causes for logs and manifests.
+
+Suggested functions:
+```python
+def collect_page_diagnostics(
+    driver: webdriver.Remote,
+    page_item: dict,
+    diagnostics_dir: Path,
+    attempt_number: int,
+    error: BaseException | str | None,
+    logger: logging.Logger
+) -> dict:
+    """Save diagnostic artifacts for a failed page capture attempt."""
+```
+
+```python
+def get_page_diagnosis_category(
+    title: str | None,
+    heading: str | None,
+    body_preview: str | None,
+    has_list_container: bool,
+    has_work_items: bool,
+    has_tos_prompt: bool
+) -> str:
+    """Classify the loaded page state for diagnostic reporting."""
+```
+The classifier should support at least:
+
+| Diagnosis category                  | Meaning                                                 |
+|------------------------------------|---------------------------------------------------------|
+| `ao3_list_ready`                   | AO3 list content is present                             |
+| `ao3_list_container_without_items` | AO3 list container exists, but no work items are present |
+| `ao3_tos_prompt`                   | AO3 Terms of Service prompt is visible                  |
+| `ao3_503_slow_response`            | AO3 returned `Error 503` / `Page Responding Too Slowly` |
+| `ao3_temporary_error`              | AO3 returned another temporary error page               |
+| `ao3_maintenance`                  | AO3 returned a maintenance page                         |
+| `rate_limited`                     | Page text suggests rate limiting or too many requests   |
+| `cloudflare_525_ssl_handshake`     | Cloudflare returned `525: SSL handshake failed`         |
+| `cloudflare_or_browser_challenge`  | Cloudflare or browser challenge page detected           |
+| `ao3_unexpected_page`              | AO3 page loaded, but not the expected list page         |
+| `unknown_page_state`               | Failure state could not be classified                   |
+
+In particular, the following page text/title patterns must be recognised:
+```text
+Page Responding Too Slowly | Archive of Our Own
+Error 503
+The page was responding too slowly.
+```
+and classified as:
+```text
+ao3_503_slow_response
+```
+The following title pattern must also be recognised:
+```text
+archiveofourown.org | 525: SSL handshake failed
+```
+and classified as:
+```text
+cloudflare_525_ssl_handshake
+```
 #### Error summarisation
 
 Responsible for:
@@ -1331,12 +1497,10 @@ Responsible for:
 - falling back to the exception type name when no useful message is available.
 
 Suggested function:
-
 ```python
 def summarise_error(error: BaseException | str | None, max_length: int = 500) -> str:
     """Create a compact one-line error summary."""
 ```
-
 #### Single page capture
 
 Responsible for:
@@ -1345,7 +1509,10 @@ Responsible for:
 - waiting for readiness;
 - saving HTML;
 - catching ordinary per-page failures;
+- collecting diagnostic artifacts when enabled;
+- classifying known failure pages when possible;
 - retrying failed attempts according to the configured retry policy;
+- applying longer backoff for known AO3/Cloudflare transient responses;
 - returning a structured result instead of raising for expected page-level failures.
 
 Expected retryable per-page failures include:
@@ -1354,10 +1521,12 @@ Expected retryable per-page failures include:
 - Selenium browser or WebDriver exceptions;
 - local Selenium/WebDriver read timeouts;
 - JavaScript execution failures;
-- file-write failures for the page.
+- file-write failures for the page;
+- AO3 503 slow-response pages;
+- Cloudflare 525 pages;
+- other temporary AO3/Cloudflare pages.
 
 Suggested function:
-
 ```python
 def capture_one_page(
     driver: webdriver.Remote,
@@ -1365,11 +1534,13 @@ def capture_one_page(
     timeout: int,
     max_retries: int,
     retry_delay: float,
-    logger: logging.Logger
+    transient_error_backoff: float,
+    logger: logging.Logger,
+    diagnosis_mode: bool = False,
+    diagnostics_dir: Path | None = None
 ) -> dict:
     """Capture one AO3 list page and return a structured manifest result."""
 ```
-
 #### Manifest writing
 
 Responsible for writing:
@@ -1378,7 +1549,6 @@ Responsible for writing:
 - timestamped per-run manifest.
 
 Suggested function:
-
 ```python
 def write_manifests(
     manifest: dict,
@@ -1387,7 +1557,6 @@ def write_manifests(
 ) -> tuple[Path, Path]:
     """Write latest and per-run manifest files."""
 ```
-
 #### Main orchestration
 
 Responsible for:
@@ -1399,12 +1568,10 @@ Responsible for:
 - exit code.
 
 Suggested function:
-
 ```python
 def main() -> int:
     """Run the batch AO3 list capture workflow and return an exit code."""
 ```
-
 ---
 
 ## 8. AO3 List Capture Behaviour
@@ -1424,7 +1591,6 @@ For each range and page number, it should combine:
 The `view_adult=true` parameter should be included in every generated list URL. AO3 may ignore it where it is not relevant, but including it makes list URLs consistent with the programme’s adult-content handling strategy and may reduce interstitial warning behaviour.
 
 For example, for year 2025 page 1:
-
 ```text
 base_url = https://archiveofourown.org/works
 view_adult = true
@@ -1432,52 +1598,42 @@ date_from = 2025-01-01
 date_to = 2025-12-31
 page = 1
 ```
-
 Generated URL:
-
 ```text
 https://archiveofourown.org/works?view_adult=true&work_search[sort_column]=revised_at&work_search[other_tag_names]=&work_search[excluded_tag_names]=&work_search[crossover]=F&work_search[complete]=&work_search[words_from]=&work_search[words_to]=&work_search[date_from]=2025-01-01&work_search[date_to]=2025-12-31&work_search[query]=&work_search[language_id]=en&commit=Sort+and+Filter&tag_id=Original+Work&page=1
 ```
-
 URL encoding can be handled by Python URL utilities.
 
 ### 8.2 Page identifier
 
 The page ID must use the format:
-
 ```text
 <year>_<page:04d>
 ```
-
 Examples:
-
 ```text
 2026_0001
-2025_3132
+2025_3131
 2019_0531
 ```
-
 The page ID is used for:
 
 - output filename;
 - manifest item ID;
 - logging;
-- `--start-page-id`.
+- `--start-page-id`;
+- `--stop-page-id`.
 
 ### 8.3 Output filename
 
 For page ID:
-
 ```text
 2025_0120
 ```
-
 the output path must be:
-
 ```text
 corpus/01_ao3_list_pages/2025/2025_0120.html
 ```
-
 ### 8.4 Existing files
 
 If the output HTML file already exists and `--reprocess` is not enabled:
@@ -1535,19 +1691,41 @@ A page should be considered valid if:
 
 For the Phase 1 ranges, a page with zero work items should be treated as a failure.
 
-### 8.7 HTML saving
+### 8.7 Failure page recognition
+
+When a capture attempt fails, especially during diagnosis mode, the programme should inspect the loaded page state.
+
+The following AO3 failure page must be recognised:
+```text
+Title: Page Responding Too Slowly | Archive of Our Own
+Heading: Error 503
+Body: The page was responding too slowly.
+```
+This page must be classified as:
+```text
+ao3_503_slow_response
+```
+The following Cloudflare/edge failure should be recognised:
+```text
+archiveofourown.org | 525: SSL handshake failed
+```
+This page must be classified as:
+```text
+cloudflare_525_ssl_handshake
+```
+These pages should be treated as retryable page-level failures, but they should use the longer transient-error backoff if configured.
+
+### 8.8 HTML saving
 
 The programme must save `driver.page_source` as UTF-8 encoded HTML.
 
 It should write to a temporary file first and then atomically replace the target file where possible.
 
 Suggested pattern:
-
 ```text
 2025_0120.html.tmp
 2025_0120.html
 ```
-
 This reduces risk of corrupt partial files if the process is interrupted during file writing.
 
 ---
@@ -1572,17 +1750,13 @@ The consent handler should:
 The programme should keep one browser session open for the whole run, so this prompt should usually only need handling once.
 
 The manifest should record at page level whether the prompt was handled for that page:
-
 ```json
 "tos_prompt_handled": true
 ```
-
 or:
-
 ```json
 "tos_prompt_handled": false
 ```
-
 ---
 
 ## 10. Browser and Selenium Behaviour
@@ -1613,35 +1787,29 @@ The programme must call `driver.quit()` in all cases where a driver has been cre
 
 The first implementation must capture pages sequentially.
 
-Parallel browser capture is out of scope for v1.
+Parallel browser capture is out of scope for v1/v2.
 
 If `--workers` is not `1`, the programme must fail with a configuration error.
 
 ### 10.4 Chrome configuration
 
 For Chrome in headless mode, use:
-
 ```text
 --headless=new
 --disable-gpu
 --window-size=1920,1080
 ```
-
 When `--chrome-server-flags` is enabled, also use:
-
 ```text
 --no-sandbox
 --disable-dev-shm-usage
 ```
-
 ### 10.5 Firefox configuration
 
 For Firefox in headless mode, use:
-
 ```text
 --headless
 ```
-
 ### 10.6 Selenium Manager
 
 The implementation may rely on Selenium Manager to locate or download the necessary browser driver.
@@ -1661,32 +1829,86 @@ This is required because long AO3 or browser stalls may otherwise surface as loc
 
 ---
 
-## 11. Politeness and Rate Limiting
+## 11. Politeness, Rate Limiting, and Behaviour-sensitive Failures
 
 The programme must include rate limiting between page requests.
 
 Default suggestion:
-
 ```text
 --request-delay 3
 --request-jitter 1
 ```
-
 The delay should be applied after every attempted page capture, whether successful or failed, unless the programme is exiting.
 
 Effective wait time:
-
 ```text
 request_delay + random value between 0 and request_jitter
 ```
-
 Example:
-
 ```text
 3.0 to 4.0 seconds
 ```
-
 This is intended to reduce unnecessary load on AO3 and make the production run more respectful.
+
+### 11.1 Behaviour-sensitive AO3 responses
+
+Development diagnostics showed that AO3 may respond differently to a Selenium/headless automated session than to an ordinary manual browser session. A URL that loads quickly in a normal browser may return AO3 or Cloudflare error pages during repeated automated capture.
+
+Observed examples include:
+```text
+Page Responding Too Slowly | Archive of Our Own
+Error 503
+The page was responding too slowly.
+```
+and:
+```text
+archiveofourown.org | 525: SSL handshake failed
+```
+This behaviour is consistent with one or more of the following:
+
+- transient AO3 load or search backend latency;
+- deep filtered pagination being expensive to generate;
+- Cloudflare or edge-layer instability;
+- different trust/fingerprint treatment for headless browser sessions;
+- behaviour-sensitive throttling based on repeated similar requests;
+- subtle anti-automation or scraper-mitigation behaviour.
+
+The programme must not attempt to bypass AO3 or Cloudflare protections. Instead, it should:
+
+- classify these responses explicitly;
+- slow down;
+- apply longer backoff;
+- retry later;
+- preserve diagnostics for auditability;
+- document unrecoverable failures for later manual or delayed backfill.
+
+### 11.2 Recommended production pacing
+
+For exploratory or small test runs:
+```text
+--request-delay 3
+--request-jitter 1
+```
+may be acceptable.
+
+For larger production or backfill runs, especially after 503/525 responses have appeared, use more conservative settings, for example:
+```text
+--request-delay 60
+--request-jitter 30
+--transient-error-backoff 600
+```
+### 11.3 Immediate retries vs delayed retries
+
+Immediate retries are useful for browser glitches and local WebDriver instability.
+
+However, for AO3/Cloudflare transient or protective responses, immediate retries may amplify the problem. The programme should therefore support longer backoff for diagnosis categories such as:
+
+- `ao3_503_slow_response`;
+- `ao3_temporary_error`;
+- `ao3_maintenance`;
+- `rate_limited`;
+- `cloudflare_525_ssl_handshake`;
+- `cloudflare_or_browser_challenge`.
 
 ---
 
@@ -1695,18 +1917,18 @@ This is intended to reduce unnecessary load on AO3 and make the production run m
 ### 12.1 Manifest structure
 
 The manifest must use this general structure:
-
 ```json
 {
   "run_metadata": {
     "run_id": "20261012T143012Z",
     "tool_name": "capture_ao3_lists.py",
-    "tool_version": "v1",
+    "tool_version": "v2-diagnosis",
     "collection_name": "ao3_original_work_english_lists_2026_2019",
     "start_time": "2026-10-12T14:30:12Z",
     "end_time": "2026-10-12T14:35:42Z",
     "test_mode": true,
     "test_limit": 5,
+    "limit_pages": null,
     "reprocess": false,
     "workers": 1,
     "collection_plan": "corpus/00_sources/ao3_list_collection_plan.json",
@@ -1721,19 +1943,23 @@ The manifest must use this general structure:
       "timeout_seconds": 30,
       "max_retries": 2,
       "retry_delay_seconds": 10,
+      "transient_error_backoff_seconds": 300,
       "request_delay_seconds": 3,
       "request_jitter_seconds": 1,
-      "start_page_id": null
+      "start_page_id": null,
+      "stop_page_id": null,
+      "diagnosis_mode": false,
+      "diagnostics_dir": null
     },
     "plan_summary": {
       "range_order": "descending_year",
       "page_order_within_year": "ascending_page",
       "years": [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019],
-      "total_pages_in_plan": 15044,
-      "total_expected_works": 300819
+      "total_pages_in_plan": 15056,
+      "total_expected_works": 301055
     },
     "summary": {
-      "selected_pages": 15044,
+      "selected_pages": 15056,
       "planned_attempts": 5,
       "attempted": 5,
       "succeeded": 5,
@@ -1759,13 +1985,13 @@ The manifest must use this general structure:
         "title": "Original Work - Works | Archive of Our Own",
         "heading": "1 - 20 of ... Works in Original Work",
         "work_items_detected": 20,
-        "tos_prompt_handled": true
+        "tos_prompt_handled": true,
+        "diagnosis": null
       }
     }
   ]
 }
 ```
-
 ### 12.2 Required page statuses
 
 The following statuses must be supported:
@@ -1785,15 +2011,12 @@ The `error` field must be:
 - a short string when an error occurs.
 
 Error strings should be concise and useful for diagnosis. The programme should prefer meaningful exception messages and avoid recording unhelpful Selenium or ChromeDriver stack-frame fragments such as:
-
 ```text
 #17 0x723dd2d3f55c <unknown>
 ```
-
 If an exception message contains only unhelpful stack-frame lines, the programme should fall back to the exception type name.
 
 Example:
-
 ```json
 {
   "page_id": "2026_0001",
@@ -1801,9 +2024,7 @@ Example:
   "error": "Expected AO3 work items were not found."
 }
 ```
-
 Another possible timeout-related example:
-
 ```json
 {
   "page_id": "2025_3050",
@@ -1811,15 +2032,39 @@ Another possible timeout-related example:
   "error": "Read timed out. (read timeout=120)"
 }
 ```
+### 12.4 Diagnosis metadata
 
-### 12.4 Partial manifests
+When diagnosis mode is enabled and a page attempt fails, the page result should include diagnosis metadata under:
+```json
+"validation": {
+  "diagnosis": {
+    "diagnosis_category": "ao3_503_slow_response",
+    "attempt_number": 1,
+    "page_id": "2026_3625",
+    "source_url": "https://archiveofourown.org/works?...",
+    "current_url": "https://archiveofourown.org/works?...",
+    "title": "Page Responding Too Slowly | Archive of Our Own",
+    "heading": "Error 503",
+    "body_preview": "Archive of Our Own ... The page was responding too slowly.",
+    "has_list_container": false,
+    "has_work_items": false,
+    "has_tos_prompt": false,
+    "error_type": "TimeoutException",
+    "error": "TimeoutException",
+    "html_path": "corpus/01_ao3_list_pages/diagnostics/<run_id>/2026_3625_attempt_1.html",
+    "screenshot_path": "corpus/01_ao3_list_pages/diagnostics/<run_id>/2026_3625_attempt_1.png",
+    "json_path": "corpus/01_ao3_list_pages/diagnostics/<run_id>/2026_3625_attempt_1.json"
+  }
+}
+```
+If diagnosis mode is disabled, this field may be absent or `null`.
+
+### 12.5 Partial manifests
 
 If interrupted, the manifest should include:
-
 ```json
 "interrupted": true
 ```
-
 inside `run_metadata`.
 
 Completed, failed, and skipped results collected before interruption must be written.
@@ -1831,25 +2076,19 @@ Completed, failed, and skipped results collected before interruption must be wri
 The programme must write an append-only log file.
 
 Default:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 ```
-
 ### Log format
 
 Each line should follow this format:
-
 ```text
 [YYYY-MM-DD HH:MM:SS] LEVEL  message
 ```
-
 Example:
-
 ```text
 [2026-10-12 14:30:12] INFO  Starting capture_ao3_lists.py run_id=20261012T143012Z
 ```
-
 ### Required log events
 
 The programme must log:
@@ -1865,13 +2104,18 @@ The programme must log:
 - Chrome server flags status;
 - test mode status;
 - test limit;
+- independent page limit, if provided;
 - reprocess setting;
 - start page ID, if provided;
+- stop page ID, if provided;
 - timeout;
 - configured Selenium page-load and script timeout behaviour;
 - max retries;
 - retry delay;
+- transient error backoff;
 - request delay and jitter;
+- diagnosis mode status;
+- diagnostics directory, if enabled;
 - collection plan summary;
 - year order;
 - total pages in plan;
@@ -1883,6 +2127,8 @@ The programme must log:
 - each successful capture;
 - each failed capture;
 - each retry;
+- diagnosis category for failed attempts when diagnosis mode is enabled;
+- diagnostic artifact paths when diagnosis mode is enabled;
 - compact and meaningful error summaries;
 - manifest write paths;
 - end-of-run summary;
@@ -1891,7 +2137,6 @@ The programme must log:
 - browser setup failures.
 
 ### Example log lines
-
 ```text
 [2026-10-12 14:30:12] INFO  Starting capture_ao3_lists.py run_id=20261012T143012Z
 [2026-10-12 14:30:12] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
@@ -1901,14 +2146,19 @@ The programme must log:
 [2026-10-12 14:30:12] INFO  Test mode: True; test_limit=5
 [2026-10-12 14:30:12] INFO  Timeout seconds: 30
 [2026-10-12 14:30:13] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
-[2026-10-12 14:30:13] INFO  Total pages in plan: 15044
+[2026-10-12 14:30:13] INFO  Total pages in plan: 15056
 [2026-10-12 14:30:14] INFO  Capturing 2026_0001 https://archiveofourown.org/works?view_adult=true&...
 [2026-10-12 14:30:18] INFO  AO3 Terms of Service prompt accepted
 [2026-10-12 14:30:19] INFO  SUCCESS 2026_0001 -> corpus/01_ao3_list_pages/2026/2026_0001.html work_items=20
 [2026-10-12 14:35:42] INFO  Wrote latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 [2026-10-12 14:35:42] INFO  Finished run: succeeded=5 failed=0 skipped_existing=0
 ```
-
+### Example diagnostic log lines
+```text
+[2026-10-17 09:02:56] WARNING DIAGNOSIS 2026_3625 attempt=1 category=ao3_503_slow_response title='Page Responding Too Slowly | Archive of Our Own'
+[2026-10-17 09:02:56] WARNING Retrying 2026_3625 after failed attempt 1/3: TimeoutException
+[2026-10-17 09:06:32] ERROR FAILED 2026_3625 status=failed_validation error='TimeoutException' diagnosis_category=ao3_503_slow_response diagnostic_json=corpus/01_ao3_list_pages/diagnostics/20261017T120029Z/2026_3625_attempt_3.json
+```
 ---
 
 ## 14. Error Handling and Resiliency
@@ -1926,7 +2176,10 @@ Examples:
 - invalid command-line arguments;
 - unsupported browser;
 - browser cannot be started;
-- start page ID not found.
+- start page ID not found;
+- stop page ID not found;
+- stop page ID before start page ID;
+- diagnostics directory cannot be created.
 
 The programme must exit non-zero.
 
@@ -1938,6 +2191,10 @@ Examples:
 
 - page load timeout;
 - AO3 transient error;
+- AO3 `Error 503`;
+- AO3 `Page Responding Too Slowly`;
+- Cloudflare `525: SSL handshake failed`;
+- suspected rate limiting;
 - browser timeout;
 - local Selenium/WebDriver communication timeout;
 - expected selector missing;
@@ -1949,7 +2206,10 @@ Examples:
 For each per-page error:
 
 - retry up to `--max-retries`;
-- use `--retry-delay` between attempts;
+- use `--retry-delay` between ordinary failed attempts;
+- use `--transient-error-backoff` for known AO3/Cloudflare transient or protective responses;
+- save diagnostic artifacts if `--diagnosis-mode` is enabled;
+- classify the failure when possible;
 - if still failing, mark the page as `failed` or `failed_validation`;
 - log a compact, meaningful error summary;
 - avoid logging only unhelpful Selenium stack-frame fragments;
@@ -1957,7 +2217,25 @@ For each per-page error:
 
 A local WebDriver read timeout, such as a timeout while Python is waiting for ChromeDriver on `localhost`, must be treated as a retryable per-page failure rather than an uncaught exception that aborts the entire run.
 
-### 14.3 Keyboard interruption
+### 14.3 AO3/Cloudflare transient and protective responses
+
+The programme must recognise that AO3 may return fully rendered error pages for automated or repeated requests. These are not always browser failures. They may indicate transient service conditions, deep-search latency, edge-layer errors, or behaviour-sensitive throttling.
+
+Known examples:
+```text
+Page Responding Too Slowly | Archive of Our Own
+Error 503
+The page was responding too slowly.
+```
+and:
+```text
+archiveofourown.org | 525: SSL handshake failed
+```
+These should be treated as retryable page-level failures, with longer backoff than ordinary Selenium validation timeouts.
+
+The programme must not attempt to bypass access controls, solve challenges, or evade protections. It should slow down, retry later, and preserve diagnostics.
+
+### 14.4 Keyboard interruption
 
 If the user interrupts the programme with `Ctrl+C`, the programme must:
 
@@ -1968,7 +2246,7 @@ If the user interrupts the programme with `Ctrl+C`, the programme must:
 - log the interruption;
 - exit non-zero.
 
-### 14.4 Exit codes
+### 14.5 Exit codes
 
 The programme must use the following exit-code conventions:
 
@@ -1999,11 +2277,11 @@ At the top of `capture_ao3_lists.py`, include a module-level docstring explainin
 - AO3 Terms of Service prompt handling;
 - default test mode;
 - resumability behaviour;
+- diagnosis mode;
 - example commands;
 - manifest and logging outputs.
 
 Suggested module docstring:
-
 ```python
 """
 Capture AO3 list pages for Phase 1 corpus data collection.
@@ -2024,6 +2302,12 @@ The script handles AO3's Terms of Service prompt when it appears, waits for
 AO3 list-page content, saves rendered HTML, and records page-level validation
 information in a JSON manifest.
 
+Diagnosis mode can be enabled with --diagnosis-mode. When enabled, failed
+attempts produce diagnostic HTML, screenshot, and JSON summary files that help
+identify whether a timeout was caused by AO3 slowness, Cloudflare/browser
+challenge pages, AO3 error pages, Terms of Service prompts, rate limiting, or
+unexpected page content.
+
 Example:
     python capture_ao3_lists.py
 
@@ -2033,11 +2317,13 @@ Full run:
 Resume from a specific page:
     python capture_ao3_lists.py --no-test-mode --start-page-id 2025_0120
 
+Diagnostic run for one page:
+    python capture_ao3_lists.py --no-test-mode --start-page-id 2026_3625 --limit-pages 1 --reprocess --diagnosis-mode
+
 The script writes an append-only log file and JSON manifests describing
 run-level metadata and per-page capture status.
 """
 ```
-
 ### 15.2 Function docstrings
 
 All major functions must include docstrings describing:
@@ -2059,6 +2345,8 @@ At minimum, docstrings are required for:
 - `create_driver`
 - `accept_ao3_tos_if_present`
 - `wait_for_ao3_list_page`
+- `collect_page_diagnostics`
+- `get_page_diagnosis_category`
 - `summarise_error`
 - `capture_one_page`
 - `write_manifests`
@@ -2069,10 +2357,9 @@ At minimum, docstrings are required for:
 ## 16. Suggested Constants
 
 The implementation should define constants near the top of the file:
-
 ```python
 TOOL_NAME = "capture_ao3_lists.py"
-TOOL_VERSION = "v1"
+TOOL_VERSION = "v2-diagnosis"
 
 DEFAULT_COLLECTION_PLAN_PATH = "corpus/00_sources/ao3_list_collection_plan.json"
 DEFAULT_OUTPUT_DIR = "corpus/01_ao3_list_pages"
@@ -2085,14 +2372,18 @@ DEFAULT_CHROME_SERVER_FLAGS = True
 
 DEFAULT_TEST_MODE = True
 DEFAULT_TEST_LIMIT = 5
+DEFAULT_LIMIT_PAGES = None
 DEFAULT_WORKERS = 1
 
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_RETRIES = 2
 DEFAULT_RETRY_DELAY_SECONDS = 10
+DEFAULT_TRANSIENT_ERROR_BACKOFF_SECONDS = 300
 
 DEFAULT_REQUEST_DELAY_SECONDS = 3.0
 DEFAULT_REQUEST_JITTER_SECONDS = 1.0
+
+DEFAULT_DIAGNOSIS_MODE = False
 
 AO3_LIST_READY_SELECTOR = "ol.work.index.group li.work"
 AO3_LIST_CONTAINER_SELECTOR = "ol.work.index.group"
@@ -2102,12 +2393,23 @@ AO3_TOS_CHECKBOX_SELECTOR = "#tos_agree"
 AO3_DATA_PROCESSING_CHECKBOX_SELECTOR = "#data_processing_agree"
 AO3_TOS_ACCEPT_BUTTON_SELECTOR = "#accept_tos"
 
+DIAGNOSIS_AO3_LIST_READY = "ao3_list_ready"
+DIAGNOSIS_AO3_LIST_CONTAINER_WITHOUT_ITEMS = "ao3_list_container_without_items"
+DIAGNOSIS_AO3_TOS_PROMPT = "ao3_tos_prompt"
+DIAGNOSIS_AO3_503_SLOW_RESPONSE = "ao3_503_slow_response"
+DIAGNOSIS_AO3_TEMPORARY_ERROR = "ao3_temporary_error"
+DIAGNOSIS_AO3_MAINTENANCE = "ao3_maintenance"
+DIAGNOSIS_RATE_LIMITED = "rate_limited"
+DIAGNOSIS_CLOUDFLARE_525_SSL_HANDSHAKE = "cloudflare_525_ssl_handshake"
+DIAGNOSIS_CLOUDFLARE_OR_BROWSER_CHALLENGE = "cloudflare_or_browser_challenge"
+DIAGNOSIS_AO3_UNEXPECTED_PAGE = "ao3_unexpected_page"
+DIAGNOSIS_UNKNOWN_PAGE_STATE = "unknown_page_state"
+
 EXIT_SUCCESS = 0
 EXIT_CAPTURE_FAILURE = 1
 EXIT_CONFIGURATION_ERROR = 2
 EXIT_INTERRUPTED = 130
 ```
-
 ---
 
 ## 17. Development Notes
@@ -2129,11 +2431,17 @@ The first implementation should prioritise:
 - clear error handling;
 - retryable handling of local WebDriver read timeouts;
 - meaningful error summaries;
+- diagnosis mode for failed attempts;
+- explicit classification of AO3 503 slow-response pages;
+- explicit classification of Cloudflare 525 SSL handshake pages;
+- conservative backoff for AO3/Cloudflare transient responses;
+- independent page limiting through `--limit-pages`;
+- optional stop-page filtering through `--stop-page-id`;
 - portability to EC2.
 
-### Out of scope for v1
+### Out of scope for v1/v2
 
-The following are out of scope for the first implementation:
+The following are out of scope for the first Selenium capture implementation:
 
 - extracting AO3 work metadata;
 - exporting JSONL or Excel metadata;
@@ -2141,7 +2449,8 @@ The following are out of scope for the first implementation:
 - extracting corpus text;
 - parallel capture;
 - browser session rotation;
-- advanced Cloudflare/challenge handling;
+- attempting to bypass AO3 or Cloudflare protections;
+- solving anti-bot challenges;
 - authenticated AO3 capture.
 
 ### Recommended implementation approach
@@ -2227,9 +2536,9 @@ The programme is considered complete when the following conditions are met:
 
 16. The programme supports Firefox with:
 
-```bash
---browser firefox
-```
+    ```bash
+    --browser firefox
+    ```
 
 17. The programme runs in headless mode by default.
 
@@ -2239,15 +2548,15 @@ The programme is considered complete when the following conditions are met:
 
 20. The programme waits for the AO3 list container using:
 
-```text
-ol.work.index.group
-```
+    ```text
+    ol.work.index.group
+    ```
 
 21. The programme waits for AO3 list content using:
 
-```text
-ol.work.index.group li.work
-```
+    ```text
+    ol.work.index.group li.work
+    ```
 
 22. The programme records the number of detected work items for each captured page.
 
@@ -2265,48 +2574,102 @@ ol.work.index.group li.work
 
 29. The programme supports starting from a specific page ID with:
 
-```bash
---start-page-id 2025_0120
-```
+    ```bash
+    --start-page-id 2025_0120
+    ```
 
 30. If `--start-page-id` is not found in the planned page list, the programme exits with a configuration error.
 
-31. The programme applies a configurable delay between requests.
+31. The programme supports stopping at a specific page ID with:
 
-32. The programme writes an append-only log file at:
+    ```bash
+    --stop-page-id 2026_3630
+    ```
 
-```text
-corpus/01_ao3_list_pages/capture_ao3_lists.log
-```
+32. If `--stop-page-id` is before `--start-page-id` in plan order, the programme exits with a configuration error.
 
-33. The programme writes a latest manifest at:
+33. The programme supports an independent page limit with:
 
-```text
-corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
-```
+    ```bash
+    --limit-pages N
+    ```
 
-34. A timestamped per-run manifest is also created for each execution.
+34. `--limit-pages` works whether or not test mode is enabled.
 
-35. The manifest records:
-- run metadata;
-- configuration;
-- collection plan path;
-- output directory;
-- year order;
-- page order;
-- per-page status;
-- generated URLs;
-- output paths;
-- validation metadata;
-- errors;
-- timings;
-- summary counts.
+35. `--test-limit` is clearly documented as applying only when test mode is enabled.
 
-36. The programme exits with:
-- `0` if all attempted captures succeed or are skipped;
-- `1` if any attempted capture fails;
-- `2` for configuration errors;
-- `130` for keyboard interruption.
+36. The programme applies a configurable delay between requests.
+
+37. The programme writes an append-only log file at:
+
+    ```text
+    corpus/01_ao3_list_pages/capture_ao3_lists.log
+    ```
+
+38. The programme writes a latest manifest at:
+
+    ```text
+    corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+    ```
+
+39. A timestamped per-run manifest is also created for each execution.
+
+40. The manifest records:
+    - run metadata;
+    - configuration;
+    - collection plan path;
+    - output directory;
+    - year order;
+    - page order;
+    - per-page status;
+    - generated URLs;
+    - output paths;
+    - validation metadata;
+    - errors;
+    - timings;
+    - summary counts.
+
+41. The programme exits with:
+    - `0` if all attempted captures succeed or are skipped;
+    - `1` if any attempted capture fails;
+    - `2` for configuration errors;
+    - `130` for keyboard interruption.
+
+42. The programme supports diagnosis mode with:
+
+    ```bash
+    --diagnosis-mode
+    ```
+
+43. When diagnosis mode is enabled, failed attempts write diagnostic `.html`, `.png`, and `.json` artifacts.
+
+44. Diagnostic artifacts are written by default to:
+
+    ```text
+    corpus/01_ao3_list_pages/diagnostics/<run_id>/
+    ```
+
+45. Diagnostic JSON records title, heading, body preview, current URL, source URL, detected AO3 selectors, exception type, compact error, and artifact paths.
+
+46. AO3 `Error 503` / `Page Responding Too Slowly` pages are classified as:
+
+    ```text
+    ao3_503_slow_response
+    ```
+
+47. Cloudflare `525: SSL handshake failed` pages are classified as:
+
+    ```text
+    cloudflare_525_ssl_handshake
+    ```
+
+48. Known AO3/Cloudflare transient responses use a longer backoff when configured with:
+
+    ```bash
+    --transient-error-backoff SECONDS
+    ```
+
+49. The programme does not attempt to bypass AO3/Cloudflare protections; it slows down, retries later, and records diagnostics.
 
 ---
 
@@ -2319,89 +2682,122 @@ The following section can be added to project documentation.
 The `capture_ao3_lists.py` programme captures AO3 list pages for Phase 1 data collection.
 
 It reads the collection plan:
-
 ```text
 corpus/00_sources/ao3_list_collection_plan.json
 ```
-
 The plan defines yearly AO3 list ranges for English works tagged as `Original Work`, excluding crossovers, from 2026 down to 2019.
 
 Recent years are captured first because AO3 users are more active in recent periods, making those list ranges more susceptible to change.
 
 Default test run:
-
 ```bash
 python capture_ao3_lists.py
 ```
-
 This captures up to 5 planned missing list pages.
 
 Full run:
-
 ```bash
 python capture_ao3_lists.py --no-test-mode
 ```
-
 To resume from a specific page ID:
-
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_0120
 ```
-
-To resume more conservatively after transient AO3, browser, or WebDriver instability:
-
+To capture a bounded page range:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3624 \
+  --stop-page-id 2026_3630
+```
+To capture only a fixed number of pages, independent of test mode:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --limit-pages 1
+```
+To resume more conservatively after transient AO3, Cloudflare, browser, or WebDriver instability:
 ```bash
 python capture_ao3_lists.py \
   --no-test-mode \
   --start-page-id 2025_3050 \
-  --request-delay 6 \
-  --request-jitter 4 \
+  --request-delay 60 \
+  --request-jitter 30 \
   --max-retries 4 \
-  --retry-delay 20 \
-  --timeout 45
+  --retry-delay 30 \
+  --transient-error-backoff 600 \
+  --timeout 90 \
+  --diagnosis-mode
 ```
-
 The programme saves rendered HTML files as:
-
 ```text
 corpus/01_ao3_list_pages/<year>/<year>_<page:04d>.html
 ```
-
 Example:
-
 ```text
 corpus/01_ao3_list_pages/2025/2025_0001.html
 ```
-
 The programme is safe to re-run: existing pages are skipped by default.
 
 To force re-capture:
-
 ```bash
 python capture_ao3_lists.py --no-test-mode --reprocess
 ```
-
+For a single-page diagnostic run, use `--limit-pages`:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --limit-pages 1 \
+  --reprocess \
+  --timeout 60 \
+  --diagnosis-mode
+```
+Diagnosis mode saves failed-attempt HTML, screenshots, and JSON summaries under:
+```text
+corpus/01_ao3_list_pages/diagnostics/<run_id>/
+```
+If AO3 returns pages such as:
+```text
+Error 503
+The page was responding too slowly.
+```
+or Cloudflare returns errors such as:
+```text
+525: SSL handshake failed
+```
+the recommended response is to slow down and retry later rather than repeatedly retrying immediately:
+```bash
+python capture_ao3_lists.py \
+  --no-test-mode \
+  --start-page-id 2026_3625 \
+  --request-delay 60 \
+  --request-jitter 30 \
+  --max-retries 3 \
+  --retry-delay 30 \
+  --transient-error-backoff 600 \
+  --timeout 90 \
+  --diagnosis-mode
+```
 The programme writes:
-
 ```text
 corpus/01_ao3_list_pages/capture_ao3_lists.log
 corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
 ```
-
 A timestamped per-run manifest is also created for each execution.
 
 For EC2:
-
 ```bash
 nohup bash run_python_ec2.sh \
   capture_ao3_lists.py \
     --no-test-mode \
     --browser chrome \
-    --request-delay 3 \
-    --request-jitter 1 \
+    --request-delay 60 \
+    --request-jitter 30 \
+    --transient-error-backoff 600 \
 > process_output.log 2>&1 &
 ```
-
 This programme only captures list-page HTML. Metadata extraction is handled later by a separate offline processing step.
