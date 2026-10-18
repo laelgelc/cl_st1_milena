@@ -54,12 +54,9 @@ bash run_python_ec2.sh \
 nohup bash run_python_ec2.sh \
     capture_ao3_lists.py \
     --no-test-mode \
-    --request-delay 6 \
-    --request-jitter 4 \
-    --max-retries 4 \
     --retry-delay 20 \
-    --timeout 45 \
     --persistent-browser-profile \
+    --transient-error-backoff 20 \
 > process_output.log 2>&1 &
 ```
 
