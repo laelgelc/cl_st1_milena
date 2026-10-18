@@ -59,6 +59,7 @@ nohup bash run_python_ec2.sh \
     --max-retries 4 \
     --retry-delay 20 \
     --timeout 45 \
+    --persistent-browser-profile \
 > process_output.log 2>&1 &
 ```
 

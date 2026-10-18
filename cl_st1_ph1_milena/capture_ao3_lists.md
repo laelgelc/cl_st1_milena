@@ -2799,12 +2799,12 @@ If the user interrupts the programme with `Ctrl+C`, the programme must:
 
 The programme must use the following exit-code conventions:
 
-| Exit code | Meaning |
-|---:|---|
-| `0` | Completed with no failed attempted captures |
-| `1` | Completed, but one or more attempted captures failed |
-| `2` | Configuration or validation error |
-| `130` | Interrupted by user |
+| Exit code | Meaning                                              |
+|----------:|------------------------------------------------------|
+|       `0` | Completed with no failed attempted captures          |
+|       `1` | Completed, but one or more attempted captures failed |
+|       `2` | Configuration or validation error                    |
+|     `130` | Interrupted by user                                  |
 
 Skipped existing files are not failures.
 

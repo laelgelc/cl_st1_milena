@@ -68256,3 +68256,145 @@
 [2026-10-18 00:47:54] WARNING Retrying 2024_0587 after failed attempt 1/3: TimeoutException
 [2026-10-18 00:48:35] WARNING Retrying 2024_0587 after failed attempt 2/3: TimeoutException
 [2026-10-18 00:49:00] WARNING Run interrupted by user
+[2026-10-17 22:07:23] INFO  Starting capture_ao3_lists.py run_id=20261018T010723Z
+[2026-10-17 22:07:23] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
+[2026-10-17 22:07:23] INFO  Output directory: corpus/01_ao3_list_pages
+[2026-10-17 22:07:23] INFO  Log file: corpus/01_ao3_list_pages/capture_ao3_lists.log
+[2026-10-17 22:07:23] INFO  Manifest file: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:07:23] INFO  Browser: chrome; headless=True
+[2026-10-17 22:07:23] INFO  Chrome server flags: True
+[2026-10-17 22:07:23] INFO  Persistent browser profile: True
+[2026-10-17 22:07:23] INFO  Browser profile directory: corpus/01_ao3_list_pages/browser_profiles
+[2026-10-17 22:07:23] INFO  Browser profile name: ao3_capture
+[2026-10-17 22:07:23] INFO  Test mode: True; test_limit=1
+[2026-10-17 22:07:23] INFO  Limit pages: None
+[2026-10-17 22:07:23] INFO  Reprocess: True
+[2026-10-17 22:07:23] INFO  Workers: 1
+[2026-10-17 22:07:23] INFO  Timeout seconds: 90
+[2026-10-17 22:07:23] INFO  Max retries: 2
+[2026-10-17 22:07:23] INFO  Retry delay seconds: 10
+[2026-10-17 22:07:23] INFO  Transient error backoff seconds: 300
+[2026-10-17 22:07:23] INFO  Request delay seconds: 3.0
+[2026-10-17 22:07:23] INFO  Request jitter seconds: 1.0
+[2026-10-17 22:07:23] INFO  Start page ID: 2026_3639
+[2026-10-17 22:07:23] INFO  Stop page ID: None
+[2026-10-17 22:07:23] INFO  Diagnosis mode: True
+[2026-10-17 22:07:23] INFO  Diagnostics directory: corpus/01_ao3_list_pages/diagnostics/20261018T010723Z
+[2026-10-17 22:07:23] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
+[2026-10-17 22:07:23] INFO  Range order: descending_year
+[2026-10-17 22:07:23] INFO  Page order within year: ascending_page
+[2026-10-17 22:07:23] INFO  Total pages in plan: 15056
+[2026-10-17 22:07:23] INFO  Skipped existing pages: 0
+[2026-10-17 22:07:23] INFO  Planned capture attempts: 1
+[2026-10-17 22:07:23] INFO  Creating Selenium browser session
+[2026-10-17 22:07:24] INFO  Capturing 2026_3639 https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3639
+[2026-10-17 22:11:00] WARNING Run interrupted by user
+[2026-10-17 22:11:00] INFO  Wrote partial latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:11:00] INFO  Wrote partial per-run manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261018T010723Z.json
+[2026-10-17 22:11:49] INFO  Starting capture_ao3_lists.py run_id=20261018T011149Z
+[2026-10-17 22:11:49] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
+[2026-10-17 22:11:49] INFO  Output directory: corpus/01_ao3_list_pages
+[2026-10-17 22:11:49] INFO  Log file: corpus/01_ao3_list_pages/capture_ao3_lists.log
+[2026-10-17 22:11:49] INFO  Manifest file: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:11:49] INFO  Browser: chrome; headless=False
+[2026-10-17 22:11:49] INFO  Chrome server flags: True
+[2026-10-17 22:11:49] INFO  Persistent browser profile: True
+[2026-10-17 22:11:49] INFO  Browser profile directory: corpus/01_ao3_list_pages/browser_profiles
+[2026-10-17 22:11:49] INFO  Browser profile name: ao3_capture
+[2026-10-17 22:11:49] INFO  Test mode: True; test_limit=1
+[2026-10-17 22:11:49] INFO  Limit pages: None
+[2026-10-17 22:11:49] INFO  Reprocess: True
+[2026-10-17 22:11:49] INFO  Workers: 1
+[2026-10-17 22:11:49] INFO  Timeout seconds: 90
+[2026-10-17 22:11:49] INFO  Max retries: 2
+[2026-10-17 22:11:49] INFO  Retry delay seconds: 10
+[2026-10-17 22:11:49] INFO  Transient error backoff seconds: 300
+[2026-10-17 22:11:49] INFO  Request delay seconds: 3.0
+[2026-10-17 22:11:49] INFO  Request jitter seconds: 1.0
+[2026-10-17 22:11:49] INFO  Start page ID: 2026_3639
+[2026-10-17 22:11:49] INFO  Stop page ID: None
+[2026-10-17 22:11:49] INFO  Diagnosis mode: True
+[2026-10-17 22:11:49] INFO  Diagnostics directory: corpus/01_ao3_list_pages/diagnostics/20261018T011149Z
+[2026-10-17 22:11:49] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
+[2026-10-17 22:11:49] INFO  Range order: descending_year
+[2026-10-17 22:11:49] INFO  Page order within year: ascending_page
+[2026-10-17 22:11:49] INFO  Total pages in plan: 15056
+[2026-10-17 22:11:49] INFO  Skipped existing pages: 0
+[2026-10-17 22:11:49] INFO  Planned capture attempts: 1
+[2026-10-17 22:11:49] INFO  Creating Selenium browser session
+[2026-10-17 22:11:50] INFO  Capturing 2026_3639 https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3639
+[2026-10-17 22:11:50] INFO  SUCCESS 2026_3639 -> corpus/01_ao3_list_pages/2026/2026_3639.html work_items=20
+[2026-10-17 22:11:54] INFO  Closing Selenium browser session
+[2026-10-17 22:11:54] INFO  Wrote latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:11:54] INFO  Wrote per-run manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261018T011149Z.json
+[2026-10-17 22:11:54] INFO  Finished run: succeeded=1 failed=0 skipped_existing=0
+[2026-10-17 22:12:33] INFO  Starting capture_ao3_lists.py run_id=20261018T011233Z
+[2026-10-17 22:12:33] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
+[2026-10-17 22:12:33] INFO  Output directory: corpus/01_ao3_list_pages
+[2026-10-17 22:12:33] INFO  Log file: corpus/01_ao3_list_pages/capture_ao3_lists.log
+[2026-10-17 22:12:33] INFO  Manifest file: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:12:33] INFO  Browser: chrome; headless=False
+[2026-10-17 22:12:33] INFO  Chrome server flags: True
+[2026-10-17 22:12:33] INFO  Persistent browser profile: True
+[2026-10-17 22:12:33] INFO  Browser profile directory: corpus/01_ao3_list_pages/browser_profiles
+[2026-10-17 22:12:33] INFO  Browser profile name: ao3_capture
+[2026-10-17 22:12:33] INFO  Test mode: True; test_limit=1
+[2026-10-17 22:12:33] INFO  Limit pages: None
+[2026-10-17 22:12:33] INFO  Reprocess: True
+[2026-10-17 22:12:33] INFO  Workers: 1
+[2026-10-17 22:12:33] INFO  Timeout seconds: 90
+[2026-10-17 22:12:33] INFO  Max retries: 2
+[2026-10-17 22:12:33] INFO  Retry delay seconds: 10
+[2026-10-17 22:12:33] INFO  Transient error backoff seconds: 300
+[2026-10-17 22:12:33] INFO  Request delay seconds: 3.0
+[2026-10-17 22:12:33] INFO  Request jitter seconds: 1.0
+[2026-10-17 22:12:33] INFO  Start page ID: 2025_2707
+[2026-10-17 22:12:33] INFO  Stop page ID: None
+[2026-10-17 22:12:33] INFO  Diagnosis mode: True
+[2026-10-17 22:12:33] INFO  Diagnostics directory: corpus/01_ao3_list_pages/diagnostics/20261018T011233Z
+[2026-10-17 22:12:33] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
+[2026-10-17 22:12:33] INFO  Range order: descending_year
+[2026-10-17 22:12:33] INFO  Page order within year: ascending_page
+[2026-10-17 22:12:33] INFO  Total pages in plan: 15056
+[2026-10-17 22:12:33] INFO  Skipped existing pages: 0
+[2026-10-17 22:12:33] INFO  Planned capture attempts: 1
+[2026-10-17 22:12:33] INFO  Creating Selenium browser session
+[2026-10-17 22:12:34] INFO  Capturing 2025_2707 https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2025-01-01&work_search%5Bdate_to%5D=2025-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=2707
+[2026-10-17 22:13:49] WARNING Run interrupted by user
+[2026-10-17 22:13:49] INFO  Wrote partial latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:13:49] INFO  Wrote partial per-run manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261018T011233Z.json
+[2026-10-17 22:13:54] INFO  Starting capture_ao3_lists.py run_id=20261018T011353Z
+[2026-10-17 22:13:54] INFO  Collection plan: corpus/00_sources/ao3_list_collection_plan.json
+[2026-10-17 22:13:54] INFO  Output directory: corpus/01_ao3_list_pages
+[2026-10-17 22:13:54] INFO  Log file: corpus/01_ao3_list_pages/capture_ao3_lists.log
+[2026-10-17 22:13:54] INFO  Manifest file: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:13:54] INFO  Browser: chrome; headless=False
+[2026-10-17 22:13:54] INFO  Chrome server flags: True
+[2026-10-17 22:13:54] INFO  Persistent browser profile: True
+[2026-10-17 22:13:54] INFO  Browser profile directory: corpus/01_ao3_list_pages/browser_profiles
+[2026-10-17 22:13:54] INFO  Browser profile name: ao3_capture
+[2026-10-17 22:13:54] INFO  Test mode: True; test_limit=1
+[2026-10-17 22:13:54] INFO  Limit pages: None
+[2026-10-17 22:13:54] INFO  Reprocess: True
+[2026-10-17 22:13:54] INFO  Workers: 1
+[2026-10-17 22:13:54] INFO  Timeout seconds: 90
+[2026-10-17 22:13:54] INFO  Max retries: 2
+[2026-10-17 22:13:54] INFO  Retry delay seconds: 10
+[2026-10-17 22:13:54] INFO  Transient error backoff seconds: 300
+[2026-10-17 22:13:54] INFO  Request delay seconds: 3.0
+[2026-10-17 22:13:54] INFO  Request jitter seconds: 1.0
+[2026-10-17 22:13:54] INFO  Start page ID: 2025_2707
+[2026-10-17 22:13:54] INFO  Stop page ID: None
+[2026-10-17 22:13:54] INFO  Diagnosis mode: True
+[2026-10-17 22:13:54] INFO  Diagnostics directory: corpus/01_ao3_list_pages/diagnostics/20261018T011353Z
+[2026-10-17 22:13:54] INFO  Loaded plan years: 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019
+[2026-10-17 22:13:54] INFO  Range order: descending_year
+[2026-10-17 22:13:54] INFO  Page order within year: ascending_page
+[2026-10-17 22:13:54] INFO  Total pages in plan: 15056
+[2026-10-17 22:13:54] INFO  Skipped existing pages: 0
+[2026-10-17 22:13:54] INFO  Planned capture attempts: 1
+[2026-10-17 22:13:54] INFO  Creating Selenium browser session
+[2026-10-17 22:13:54] INFO  Capturing 2025_2707 https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2025-01-01&work_search%5Bdate_to%5D=2025-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=2707
+[2026-10-17 22:14:04] WARNING Run interrupted by user
+[2026-10-17 22:14:04] INFO  Wrote partial latest manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json
+[2026-10-17 22:14:04] INFO  Wrote partial per-run manifest: corpus/01_ao3_list_pages/capture_ao3_lists_manifest_20261018T011353Z.json

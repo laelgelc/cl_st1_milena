@@ -1,0 +1,63 @@
+{
+  "run_metadata": {
+    "run_id": "20261018T011233Z",
+    "tool_name": "capture_ao3_lists.py",
+    "tool_version": "v3-persistent-profile",
+    "collection_name": "ao3_original_work_english_lists_2026_2019",
+    "start_time": "2026-10-18T01:12:33Z",
+    "end_time": "2026-10-18T01:13:49Z",
+    "test_mode": true,
+    "test_limit": 1,
+    "limit_pages": null,
+    "reprocess": true,
+    "workers": 1,
+    "collection_plan": "corpus/00_sources/ao3_list_collection_plan.json",
+    "output_dir": "corpus/01_ao3_list_pages",
+    "log_file": "corpus/01_ao3_list_pages/capture_ao3_lists.log",
+    "manifest_file": "corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json",
+    "interrupted": true,
+    "config": {
+      "browser": "chrome",
+      "headless": false,
+      "chrome_server_flags": true,
+      "persistent_browser_profile": true,
+      "browser_profile_dir": "corpus/01_ao3_list_pages/browser_profiles",
+      "browser_profile_name": "ao3_capture",
+      "timeout_seconds": 90,
+      "max_retries": 2,
+      "retry_delay_seconds": 10,
+      "transient_error_backoff_seconds": 300,
+      "request_delay_seconds": 3.0,
+      "request_jitter_seconds": 1.0,
+      "start_page_id": "2025_2707",
+      "stop_page_id": null,
+      "diagnosis_mode": true,
+      "diagnostics_dir": "corpus/01_ao3_list_pages/diagnostics/20261018T011233Z"
+    },
+    "plan_summary": {
+      "range_order": "descending_year",
+      "page_order_within_year": "ascending_page",
+      "years": [
+        2026,
+        2025,
+        2024,
+        2023,
+        2022,
+        2021,
+        2020,
+        2019
+      ],
+      "total_pages_in_plan": 15056,
+      "total_expected_works": 301055
+    },
+    "summary": {
+      "selected_pages": 1,
+      "planned_attempts": 1,
+      "attempted": 0,
+      "succeeded": 0,
+      "failed": 0,
+      "skipped_existing": 0
+    }
+  },
+  "pages": []
+}

@@ -1,0 +1,84 @@
+{
+  "run_metadata": {
+    "run_id": "20261018T011149Z",
+    "tool_name": "capture_ao3_lists.py",
+    "tool_version": "v3-persistent-profile",
+    "collection_name": "ao3_original_work_english_lists_2026_2019",
+    "start_time": "2026-10-18T01:11:49Z",
+    "end_time": "2026-10-18T01:11:54Z",
+    "test_mode": true,
+    "test_limit": 1,
+    "limit_pages": null,
+    "reprocess": true,
+    "workers": 1,
+    "collection_plan": "corpus/00_sources/ao3_list_collection_plan.json",
+    "output_dir": "corpus/01_ao3_list_pages",
+    "log_file": "corpus/01_ao3_list_pages/capture_ao3_lists.log",
+    "manifest_file": "corpus/01_ao3_list_pages/capture_ao3_lists_manifest.json",
+    "interrupted": false,
+    "config": {
+      "browser": "chrome",
+      "headless": false,
+      "chrome_server_flags": true,
+      "persistent_browser_profile": true,
+      "browser_profile_dir": "corpus/01_ao3_list_pages/browser_profiles",
+      "browser_profile_name": "ao3_capture",
+      "timeout_seconds": 90,
+      "max_retries": 2,
+      "retry_delay_seconds": 10,
+      "transient_error_backoff_seconds": 300,
+      "request_delay_seconds": 3.0,
+      "request_jitter_seconds": 1.0,
+      "start_page_id": "2026_3639",
+      "stop_page_id": null,
+      "diagnosis_mode": true,
+      "diagnostics_dir": "corpus/01_ao3_list_pages/diagnostics/20261018T011149Z"
+    },
+    "plan_summary": {
+      "range_order": "descending_year",
+      "page_order_within_year": "ascending_page",
+      "years": [
+        2026,
+        2025,
+        2024,
+        2023,
+        2022,
+        2021,
+        2020,
+        2019
+      ],
+      "total_pages_in_plan": 15056,
+      "total_expected_works": 301055
+    },
+    "summary": {
+      "selected_pages": 1,
+      "planned_attempts": 1,
+      "attempted": 1,
+      "succeeded": 1,
+      "failed": 0,
+      "skipped_existing": 0
+    }
+  },
+  "pages": [
+    {
+      "page_id": "2026_3639",
+      "year": 2026,
+      "page": 3639,
+      "url": "https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3639",
+      "current_url": "https://archiveofourown.org/works?view_adult=true&work_search%5Bsort_column%5D=revised_at&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=F&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=2026-01-01&work_search%5Bdate_to%5D=2026-12-31&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=en&commit=Sort+and+Filter&tag_id=Original+Work&page=3639",
+      "output_path": "corpus/01_ao3_list_pages/2026/2026_3639.html",
+      "status": "success",
+      "error": null,
+      "retries": 0,
+      "duration_seconds": 0.441,
+      "start_time": "2026-10-18T01:11:50Z",
+      "end_time": "2026-10-18T01:11:50Z",
+      "validation": {
+        "title": "Original Work - Works | Archive of Our Own",
+        "heading": "72,761 - 72,780 of 77,342 Works in Original Work",
+        "work_items_detected": 20,
+        "tos_prompt_handled": false
+      }
+    }
+  ]
+}
