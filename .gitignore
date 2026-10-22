@@ -220,6 +220,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # cl_st1_milena
+.idea/
 !cl_st1_ph0_milena/env
 !cl_st1_ph0_milena/**/*.log
 !cl_st1_preph1_milena/env
